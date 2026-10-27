@@ -1,0 +1,13 @@
+Vantage includes third-party material under its own licence:
+
+The icons are Material Symbols (Outlined) by Google
+(https://github.com/google/material-design-icons), licensed under the Apache
+License, Version 2.0 (full text in LICENSE-Apache-2.0.txt). That covers the
+icon sprite in index.html, static/logo.svg, static/icon.png and the README
+banner (docs/banner.svg, docs/banner.png), which use the "radar" symbol;
+static/icon.png is that symbol rendered in Vantage's colours on a dark tile.
+
+The page font, static/JetBrainsMono-Regular.woff2, is JetBrains Mono
+(https://github.com/JetBrains/JetBrainsMono), copyright 2020 The JetBrains Mono
+Project Authors, licensed under the SIL Open Font License, Version 1.1 (full
+text in LICENSE-OFL-1.1.txt).

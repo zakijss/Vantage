@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 400" width="900" height="400" role="img" aria-label="Vantage data flow: sources feed server.py, which serves the globe page, the briefing page and alerts">
+<style>
+text{font:14px -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;fill:#1f2328}
+.s{font-size:12px;fill:#59636e}.h{font-weight:600}
+.b{fill:none;stroke:#8c959f;stroke-width:1.5}.a{fill:none;stroke:#0969da;stroke-width:2}.k{fill:none;stroke:#0969da;stroke-width:1.5;stroke-dasharray:6 5}
+.c{fill:#0969da;fill-opacity:.08;stroke:#0969da;stroke-width:1.5}.m{fill:#0969da}.t{fill:#0969da;font-size:12px;font-weight:600;letter-spacing:.06em}
+@media (prefers-color-scheme:dark){text{fill:#e6edf3}.s{fill:#9198a1}.b{stroke:#6e7681}.a,.k{stroke:#4493f8}.c{fill:#4493f8;stroke:#4493f8;fill-opacity:.12}.m,.t{fill:#4493f8}}
+</style>
+<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="m" d="M0 0L10 5L0 10z"/></marker></defs>
+<text class="t" x="20" y="28">SOURCES</text>
+<rect class="b" x="20" y="44" width="230" height="52" rx="8"/><text class="h" x="36" y="66">Host /proc and /sys</text><text class="s" x="36" y="84">CPU, memory, disks, temperature</text>
+<rect class="b" x="20" y="108" width="230" height="52" rx="8"/><text class="h" x="36" y="130">Your services</text><text class="s" x="36" y="148">HTTP checks every 30 s</text>
+<rect class="b" x="20" y="172" width="230" height="52" rx="8"/><text class="h" x="36" y="194">Tailscale and Beszel</text><text class="s" x="36" y="212">tailnet devices, peer stats</text>
+<rect class="b" x="20" y="236" width="230" height="52" rx="8"/><text class="h" x="36" y="258">Public feeds</text><text class="s" x="36" y="276">quakes, aircraft, cables, news</text>
+<rect class="b" x="20" y="300" width="230" height="52" rx="8"/><text class="h" x="36" y="322">Host scripts</text><text class="s" x="36" y="340">briefing, Lynis summaries</text>
+<path class="a" d="M250 70C300 70 300 190 336 196" marker-end="url(#ar)"/>
+<path class="a" d="M250 134C290 134 300 196 336 198" marker-end="url(#ar)"/>
+<path class="a" d="M250 198L336 200" marker-end="url(#ar)"/>
+<path class="a" d="M250 262C290 262 300 204 336 202" marker-end="url(#ar)"/>
+<path class="a" d="M250 326C300 326 300 210 336 204" marker-end="url(#ar)"/>
+<rect class="c" x="340" y="140" width="220" height="120" rx="10"/>
+<text class="h" x="450" y="182" text-anchor="middle" style="font-size:17px">server.py</text>
+<text class="s" x="450" y="206" text-anchor="middle">Python standard library</text>
+<text class="s" x="450" y="224" text-anchor="middle">history in SQLite</text>
+<text class="t" x="640" y="28">OUTPUTS</text>
+<path class="a" d="M560 180C600 180 600 96 636 96" marker-end="url(#ar)"/>
+<path class="a" d="M560 200L636 200" marker-end="url(#ar)"/>
+<path class="a" d="M560 220C600 220 600 304 636 304" marker-end="url(#ar)"/>
+<rect class="b" x="640" y="66" width="240" height="60" rx="8"/><text class="h" x="656" y="90">Browser: the globe</text><text class="s" x="656" y="110">index.html, WebGL</text>
+<rect class="b" x="640" y="170" width="240" height="60" rx="8"/><text class="h" x="656" y="194">/briefing and /security</text><text class="s" x="656" y="214">daily briefing, Lynis audits</text>
+<rect class="b" x="640" y="274" width="240" height="60" rx="8"/><text class="h" x="656" y="298">Alerts</text><text class="s" x="656" y="318">ntfy or any webhook</text>
+<text class="s" x="450" y="386" text-anchor="middle">Watch only: Vantage reads and reports. It never changes the machines it watches.</text>
+</svg>

@@ -1,0 +1,157 @@
+{
+  "host": {
+    "name": "homeserver",
+    "label": "HOMESERVER",
+    "role": "server",
+    "about": "The machine Vantage runs on. Every service below runs here.",
+    "wiki": "",
+    "github": ""
+  },
+  "peer": {
+    "name": "laptop",
+    "label": "LAPTOP",
+    "role": "laptop",
+    "about": "A laptop that pushes its own CPU, memory, temperature and battery through agent.py."
+  },
+  "origin": "https://homeserver.example.ts.net:8443",
+  "owners": [
+    "you@example.com"
+  ],
+  "dashboard": {
+    "label": "Home",
+    "url": "https://homeserver.example.ts.net:8444/",
+    "title": "Open the home dashboard"
+  },
+  "history_link": {
+    "label": "Full history in Beszel",
+    "url": "https://homeserver.example.ts.net:8090/"
+  },
+  "service_host": "homeserver.example.ts.net",
+  "gateway_probe_port": 8080,
+  "services": [
+    {
+      "name": "Home Assistant",
+      "port": 8123,
+      "public": 8445,
+      "desc": "Home automation",
+      "about": "Open-source home automation that runs locally.",
+      "github": "https://github.com/home-assistant/core"
+    },
+    {
+      "name": "Grafana",
+      "port": 3000,
+      "ok": [
+        302
+      ],
+      "public": 8446,
+      "desc": "Dashboards"
+    },
+    {
+      "name": "Paperless-ngx",
+      "port": 8000,
+      "ok": [
+        302
+      ],
+      "url": "https://docs.example.ts.net/",
+      "desc": "Document archive"
+    },
+    {
+      "name": "Uptime Kuma",
+      "port": 3001,
+      "path": "/",
+      "public": 8447,
+      "desc": "Uptime monitor"
+    },
+    {
+      "name": "Wiki.js",
+      "port": 3002,
+      "ok": [
+        401
+      ],
+      "public": 8448,
+      "on_demand": true,
+      "desc": "Wiki"
+    }
+  ],
+  "home": {
+    "name": "London",
+    "code": "LON",
+    "lat": 51.507,
+    "lon": -0.128,
+    "tz": "Europe/London"
+  },
+  "cities": [
+    {
+      "n": "LON",
+      "name": "London",
+      "tz": "Europe/London",
+      "lat": 51.507,
+      "lon": -0.128
+    },
+    {
+      "n": "UTC",
+      "name": "UTC",
+      "tz": "UTC"
+    },
+    {
+      "n": "TYO",
+      "name": "Tokyo",
+      "tz": "Asia/Tokyo",
+      "lat": 35.68,
+      "lon": 139.69
+    }
+  ],
+  "disks": [
+    {
+      "name": "Data",
+      "path": "/mnt/data"
+    },
+    {
+      "name": "Backup",
+      "path": "/mnt/backup"
+    }
+  ],
+  "backup_path": "/mnt/backup",
+  "cert": {
+    "host": "homeserver.example.ts.net",
+    "port": 9090,
+    "label": "Cockpit cert"
+  },
+  "notify_url": "https://ntfy.sh/your-private-topic",
+  "tailnet_domain": "example.ts.net",
+  "expected_open": [
+    "22",
+    "9090",
+    "41641"
+  ],
+  "expected_public": [],
+  "exposure_file": "/state/exposure.json",
+  "acks_file": "/app/acks.json",
+  "recon_domains": [],
+  "recon_emails": [],
+  "threat_watch": [
+    "home assistant",
+    "grafana",
+    "paperless",
+    "linux kernel"
+  ],
+  "threat_kev_days": 14,
+  "ransomware_url": "",
+  "flights_radius_nm": 60,
+  "flights_watch": [],
+  "alert_cert_days": 14,
+  "alert_backup_hours": 36,
+  "alert_disk_pct": 90,
+  "alert_grace_min": 10,
+  "retain_days": 30,
+  "acdb_dir": "/state/acdb",
+  "security_dir": "/state/security",
+  "cables_api": "https://www.submarinecablemap.com/api/v3",
+  "scans": [
+    {
+      "id": "lynis",
+      "label": "Lynis",
+      "about": "A Lynis audit of every host, about 5 minutes"
+    }
+  ]
+}

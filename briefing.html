@@ -1,0 +1,561 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<title>Command and Control</title>
+<link rel="icon" type="image/png" href="/static/icon.png">
+<style>
+  @font-face { font-family: "JetBrains Mono"; font-style: normal; font-weight: 400; font-display: swap;
+    src: url("/static/JetBrainsMono-Regular.woff2") format("woff2"); }
+
+  /* The theme is five numbers, as in a Dynacat or Glance theme block (background
+     as hue, saturation, lightness; contrast; text saturation). Every grey below
+     is worked out from them with Dynacat's own formulas, so a different theme
+     only needs these lines changed. */
+  :root {
+    --bgh: 0; --bgs: 0%; --bgl: 12%;
+    --cm: 1.15;                                  /* contrast-multiplier */
+    --tsm: 0.9;                                  /* text-saturation-multiplier */
+    --primary: hsl(360, 100%, 60%);              /* selection, focus and graph lines */
+    --ok: hsl(135, 65%, 52%);                    /* positive-color */
+    --bad: hsl(209, 88%, 54%);                   /* negative-color */
+    --warn: hsl(40, 85%, 62%);
+
+    --bg: hsl(var(--bgh), var(--bgs), var(--bgl));
+    --card: hsla(var(--bgh), var(--bgs), calc(var(--bgl) + 3%), 0.72);
+    --border: hsl(var(--bgh), var(--bgs), calc(var(--bgl) + 4%));
+    --sep: hsl(var(--bgh), var(--bgs), calc(var(--bgl) + 4% * var(--cm)));
+    --grid: hsl(var(--bgh), var(--bgs), calc(var(--bgl) + 6% * var(--cm)));
+    --ths: var(--bgh), calc(var(--bgs) * var(--tsm));
+    --text-hi: hsl(var(--ths), calc(var(--cm) * 85%));
+    --text-para: hsl(var(--ths), calc(var(--cm) * 73%));
+    --text: hsl(var(--ths), calc(var(--cm) * 58%));
+    --subdue: hsl(var(--ths), calc(var(--cm) * 35%));
+
+    /* glass for the header, fills for controls and tiles */
+    --glass-fill: hsla(var(--bgh), var(--bgs), calc(var(--bgl) + 6%), 0.55);
+    --glass-border: hsla(0, 0%, 100%, 0.12);
+    --glass-shadow: inset 0 0 0 1px hsla(0, 0%, 100%, 0.04), 0 12px 32px rgba(0, 0, 0, 0.32);
+    --fill: hsla(0, 0%, 100%, 0.045);
+    --hover: hsla(0, 0%, 100%, 0.08);
+    --selected: hsla(0, 0%, 100%, 0.12);
+    --press: hsla(0, 0%, 100%, 0.18);
+
+    --radius: 8px;
+    --tile-min: 210px;                           /* two tiles a row on a phone */
+    --gap: 20px;
+    --pad: 14px 16px;
+    --mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  @media (max-width: 550px) { :root { --gap: 14px; --pad: 12px 13px; --tile-min: 140px; } }
+  @media (prefers-contrast: more) {
+    :root { --glass-border: hsla(0, 0%, 100%, 0.4); --hover: hsla(0, 0%, 100%, 0.16);
+      --selected: hsla(0, 0%, 100%, 0.24); --press: hsla(0, 0%, 100%, 0.32); }
+  }
+
+  * { box-sizing: border-box; }
+  html { background: var(--bg); scrollbar-color: var(--subdue) transparent; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 13px/1.6 var(--mono);
+    font-variant-ligatures: none; -webkit-font-smoothing: antialiased; }
+  button { font: inherit; }
+
+  /* ---- header: the start page's floating glass bar */
+  header { position: sticky; top: 10px; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    max-width: 1920px; min-height: 58px; margin: 10px auto 0; padding: 8px 8px 8px 14px;
+    border: 1px solid var(--glass-border); border-radius: calc(var(--radius) + 6px);
+    background: var(--glass-fill); box-shadow: var(--glass-shadow);
+    backdrop-filter: blur(24px) saturate(1.4); -webkit-backdrop-filter: blur(24px) saturate(1.4); }
+  .wrap { margin-inline: var(--gap); }
+  /* static/logo.svg in its own colours, any aspect ratio */
+  .logo { width: 30px; height: 30px; flex: none; object-fit: contain; }
+  h1 { margin: 0 auto 0 4px; font-size: 16px; font-weight: 600; color: var(--text-hi); }
+  /* small text buttons: one bordered pill, 36 px drawn, 44 px to hit */
+  .pill, .act { position: relative; display: inline-grid; place-items: center; flex: none; min-height: 36px; padding: 0 16px;
+    border: 1px solid var(--glass-border); border-radius: 999px; background: none; color: var(--text);
+    font-size: 13px; text-decoration: none; cursor: pointer; transition: background-color .15s, color .15s, transform .12s; }
+  .pill::after, .act::after { content: ""; position: absolute; inset: -4px; }
+  .pill:hover:not(:disabled), .act:hover { background: var(--hover); color: var(--text-hi); }
+  .pill:active:not(:disabled), .act:active { background: var(--press); transform: scale(.97); }
+  .pill:disabled { opacity: .5; cursor: default; }
+  #scans { display: flex; flex-wrap: wrap; gap: 8px; }
+  #scans[hidden] { display: none; }
+  #scan-msg { max-width: 1920px; margin: 8px auto 0; color: var(--subdue); text-align: right; }
+  #scan-msg:empty { display: none; }
+
+  /* ---- layout: the history in a 300 px column, the view filling the rest */
+  main { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: var(--gap); align-items: start;
+    max-width: 1920px; margin: var(--gap) auto; }
+  .widget { min-width: 0; }
+  /* titles sit above their card, as on the start page */
+  .wh { display: flex; align-items: center; gap: 10px; min-height: 36px; margin: 0 0 7px; padding: 0 17px;
+    font-size: 14px; font-weight: 400; text-transform: uppercase; color: var(--text); }
+  .wh .act { margin-left: auto; text-transform: none; }
+  .card { padding: var(--pad); border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--card); box-shadow: 0 10px 24px rgba(0, 0, 0, .3); }
+
+  /* ---- history */
+  nav { position: sticky; top: 88px; }
+  nav .card { display: flex; flex-direction: column; max-height: calc(100vh - 150px); padding: 10px; }
+  .filters { display: flex; flex-wrap: wrap; gap: 8px 4px; padding: 2px 2px 10px; border-bottom: 1px solid var(--sep); }
+  .filters button { position: relative; height: 32px; padding: 0 12px; border: 0; border-radius: 999px; background: none;
+    color: var(--text); cursor: pointer; transition: background-color .15s, color .15s; }
+  .filters button::after { content: ""; position: absolute; inset: -6px 0; }
+  .filters button:hover { background: var(--hover); color: var(--text-hi); }
+  .filters button[aria-pressed="true"] { background: var(--selected); color: var(--text-hi); font-weight: 600; }
+  #list { overflow-y: auto; margin-top: 8px; overscroll-behavior: contain; }
+  #list button { display: block; width: 100%; margin: 0 0 2px; padding: 9px 12px; border: 0; border-radius: var(--radius);
+    background: none; color: inherit; text-align: left; cursor: pointer; transition: background-color .15s; }
+  #list button:hover { background: var(--hover); }
+  #list button[aria-current="true"] { background: var(--selected); box-shadow: inset 3px 0 var(--primary); }
+  #list button[aria-current="true"] .d { color: var(--text-hi); }
+  nav .d { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text-para); }
+  nav .k { margin-left: auto; font-weight: 400; font-size: 11px; text-transform: uppercase; color: var(--subdue); }
+  nav .h { display: block; margin-top: 1px; font-size: 12px; color: var(--subdue); }
+  #list .note { padding: 9px 12px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); flex: none; }
+  .dot.attention, .dot.warn { background: var(--warn); }
+
+  /* ---- the view: cards in a grid that fills the width */
+  #view { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 560px), 1fr)); gap: var(--gap); align-items: start; }
+  #view > .note { margin: 0; padding: 0 17px; }
+  .span { grid-column: 1 / -1; }
+  .top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-bottom: 14px; }
+  .head { margin: 0; font-size: 16px; font-weight: 600; color: var(--text-hi); }
+  .when { margin: 0 0 0 auto; font-size: 12px; color: var(--subdue); font-variant-numeric: tabular-nums; }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--tile-min)), 1fr)); gap: 10px; }
+  .tile { min-width: 0; padding: 10px 12px 9px; border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--fill); color: var(--primary); }
+  .tile.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 55%, transparent); }
+  .tile.bad { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 60%, transparent); }
+  .tile .l { font-size: 11px; text-transform: uppercase; color: var(--subdue); }
+  .tile .v { font-size: 22px; font-weight: 600; line-height: 1.3; color: var(--text-hi); font-variant-numeric: tabular-nums; }
+  .tile.warn .v { color: var(--warn); } .tile.bad .v { color: var(--bad); }
+  .tile .u { font-size: 12px; color: var(--subdue); }
+  .tile .n { font-size: 11px; color: var(--subdue); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  /* the sparklines grow with the screen */
+  .tile svg { display: block; width: 100%; height: clamp(36px, 3.4vw, 72px); margin: 6px 0 4px; }
+
+  ul { list-style: none; margin: 0; padding: 0; }
+  /* briefing items: one rounded fill per row */
+  .items { display: flex; flex-direction: column; gap: 6px; }
+  .items li { display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 12px; border-radius: var(--radius);
+    background: var(--fill); color: var(--text-para); }
+  .items li .t { flex: 1; min-width: 0; }
+  .items li::before { content: ""; width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--ok); }
+  .items li.warn::before { background: var(--warn); } .items li.bad::before { background: var(--bad); }
+  .items li.done { color: var(--subdue); }
+  .items li.done .t { text-decoration: line-through; text-decoration-color: var(--subdue); }
+  .items li.done::before { background: var(--subdue); }
+  .act { min-height: 32px; padding: 0 14px; }
+  .act::after { inset: -6px; }
+
+  /* ---- security: Lynis findings and alerts */
+  .sec li { padding: 9px 0; border-top: 1px solid var(--sep); }
+  .sec li:first-child { border-top: 0; padding-top: 0; }
+  .sec li:last-child { padding-bottom: 0; }
+  .sec li .top { margin: 0; align-items: baseline; }
+  .sec li .t { flex: 1 1 260px; min-width: 0; color: var(--text-para); overflow-wrap: anywhere; }
+  .sec li.warning .t, .sec .alert.high .t { color: var(--warn); }
+  .sec li .id { flex: none; font-weight: 600; color: var(--text-hi); text-decoration: underline;
+    text-decoration-color: var(--subdue); text-underline-offset: 3px; }
+  .sec li .id:hover { text-decoration-color: var(--text-hi); }
+  .sec li .more { margin: 2px 0 0; font-size: 12px; color: var(--subdue); overflow-wrap: anywhere; }
+  .tag { flex: none; padding: 0 8px; border: 1px solid var(--primary); border-radius: 999px; color: var(--text-hi); font-size: 11px; }
+  h3 { margin: 18px 0 8px; font-size: 13px; font-weight: 600; color: var(--text-hi); }
+  h3:first-child { margin-top: 0; }
+  .alert time { margin-right: 4px; color: var(--subdue); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .alert .host { font-weight: 600; color: var(--text-hi); }
+  .chart { margin-top: 16px; }
+  .chart .l { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; color: var(--subdue); }
+  .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .chart .axis { fill: var(--subdue); font: 11px var(--mono); }
+  .note { color: var(--subdue); }
+  :focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+  /* phones and narrow windows: the history above the view, scrolling on its own */
+  @media (max-width: 860px) {
+    main { grid-template-columns: minmax(0, 1fr); }
+    nav { position: static; }
+    nav .card { max-height: 42vh; }
+    header { top: 6px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="wrap">
+  <img class="logo" src="/static/logo.svg" alt="" width="30" height="30">
+  <h1>Command and Control</h1>
+  <div id="scans" hidden></div>
+  <a class="pill" href="/">&larr; Vantage</a>
+</header>
+<p id="scan-msg" class="wrap" aria-live="polite"></p>
+<main class="wrap">
+  <nav id="nav" class="widget" aria-label="History">
+    <h2 class="wh">History</h2>
+    <div class="card">
+      <div class="filters" role="group" aria-label="Show">
+        <button type="button" data-f="all" aria-pressed="true">All</button>
+        <button type="button" data-f="briefing" aria-pressed="false">Briefings</button>
+        <button type="button" data-f="lynis" aria-pressed="false">Lynis</button>
+        <button type="button" data-f="alerts" aria-pressed="false">Alerts</button>
+        <button type="button" data-f="look" aria-pressed="false">Needs a look</button>
+      </div>
+      <div id="list"></div>
+    </div>
+  </nav>
+  <div id="view" aria-live="polite"><p class="note">Loading…</p></div>
+</main>
+<script>
+(() => {
+  const nav = document.getElementById('nav'), hist = document.getElementById('list'), view = document.getElementById('view');
+  // the token the main page stored, for devices Tailscale Serve can't name (tagged ones)
+  let token = null;
+  try { token = localStorage.getItem('vantage.token'); } catch (e) {}
+  const api = (path, opts) => fetch(path, Object.assign({ headers: Object.assign({ 'Content-Type': 'application/json' }, token ? { 'X-Dash-Token': token } : {}) }, opts))
+    .then((r) => { if (!r.ok) throw new Error(r.status === 403 ? 'Open this from your own device on the tailnet.' : `HTTP ${r.status}`); return r.json(); });
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+  const day = (d, opts) => new Date(`${d}T12:00`).toLocaleDateString(undefined, opts || { day: 'numeric', month: 'short' });
+  // /security (the main page's SECURITY button and the Lynis posts' link) opens on the security side
+  const startOnSecurity = location.pathname === '/security';
+  let current;
+
+  // the view is a grid of cards; a card's title sits above it. redraw, when set,
+  // redraws the current view's chart at the new width after a resize.
+  let redraw = null;
+  addEventListener('resize', () => redraw && redraw());
+  function clear(cls) {
+    view.className = cls || '';
+    view.replaceChildren();
+    redraw = null;
+  }
+  function card(title, wide) {
+    const w = el('section', `widget${wide ? ' span' : ''}`), c = el('div', 'card');
+    if (title != null) w.append(el('h2', 'wh', title));
+    w.append(c);
+    view.append(w);
+    return c;
+  }
+  function top(dotCls, headline, when) {
+    const t = el('div', 'top');
+    t.append(el('span', `dot ${dotCls}`), el('p', 'head', headline), el('p', 'when', when));
+    return t;
+  }
+
+  function select(btn) {
+    hist.querySelectorAll('button').forEach((b) => b.setAttribute('aria-current', String(b === btn)));
+  }
+
+  // ---- the history: briefings, Lynis runs and alerts in one list, newest first, with filters
+  // entry: {kind: 'briefing'|'lynis'|'alerts', date, look (needs a look), name, note, show}
+  const entries = [];
+  let filter = 'all';
+  const shown = (e) => filter === 'all' || (filter === 'look' ? e.look : e.kind === filter);
+  function addEntries(more) {
+    entries.push(...more);
+    entries.sort((a, b) => b.date.localeCompare(a.date));
+    drawList();
+  }
+  function drawList() {
+    const sel = entries.find((e) => e.btn?.getAttribute('aria-current') === 'true')?.id;
+    hist.replaceChildren();
+    for (const e of entries.filter(shown)) {
+      const b = e.btn = el('button'), d = el('span', 'd');
+      b.dataset.id = e.id;
+      d.append(el('span', `dot${e.look ? ' warn' : ''}`), e.name, el('span', 'k', e.kind));
+      b.append(d, el('span', 'h', e.note));
+      b.onclick = () => { select(b); e.show(); };
+      if (e.id === sel) b.setAttribute('aria-current', 'true');
+      hist.append(b);
+    }
+    if (!hist.children.length) hist.append(el('p', 'note', 'Nothing here.'));
+  }
+  nav.querySelectorAll('.filters button').forEach((f) => f.onclick = () => {
+    filter = f.dataset.f;
+    nav.querySelectorAll('.filters button').forEach((x) => x.setAttribute('aria-pressed', String(x === f)));
+    drawList();
+  });
+
+  // ---- briefings
+
+  // the dashboard widget's small graphs, stretched to the tile; a line gets a faint area under it
+  function graph(t) {
+    const W = 120, H = 26, pts = t.spark || [], n = pts.length, ns = 'http://www.w3.org/2000/svg';
+    const s = document.createElementNS(ns, 'svg');
+    s.setAttribute('viewBox', `0 0 ${W} ${H}`); s.setAttribute('preserveAspectRatio', 'none');
+    s.setAttribute('aria-hidden', 'true');
+    const add = (tag, a) => { const e = document.createElementNS(ns, tag); for (const k in a) e.setAttribute(k, a[k]); s.append(e); };
+    if (!n) return s;
+    const step = W / n, vals = pts.map((v, i) => [i, v]).filter(([, v]) => v != null);
+    if (t.kind === 'bars' || t.kind === 'strip') {
+      const max = Math.max(1, ...vals.map((p) => p[1]));
+      for (const [i, v] of vals) {
+        const h = t.kind === 'strip' ? H - 8 : v ? Math.max(3, v / max * (H - 2)) : 0;
+        if (h) add('rect', { x: i * step + .4, y: H - h, width: Math.max(.8, step - .8), height: h,
+          fill: t.kind === 'strip' ? (v ? 'var(--ok)' : 'var(--bad)') : 'currentColor', opacity: t.kind === 'strip' && v ? .75 : .85 });
+      }
+      return s;
+    }
+    if (!vals.length) return s;
+    let lo = Math.min(...vals.map((p) => p[1])), hi = Math.max(...vals.map((p) => p[1]));
+    if (hi - lo < 1e-9) { lo -= 1; hi += 1; }
+    if (vals.length === 1) vals.unshift([vals[0][0] - .9, vals[0][1]]);
+    const x = (i) => (i + .5) * step, y = (v) => H - 3 - (v - lo) / (hi - lo) * (H - 6);
+    const line = vals.map(([i, v], k) => `${k ? 'L' : 'M'}${x(i)},${y(v)}`).join('');
+    add('path', { d: `${line}L${x(vals.at(-1)[0])},${H}L${x(vals[0][0])},${H}Z`, fill: 'currentColor', opacity: .14 });
+    add('path', { d: line, fill: 'none', stroke: 'currentColor', 'stroke-width': 1.75, 'stroke-linejoin': 'round',
+      'stroke-linecap': 'round', 'vector-effect': 'non-scaling-stroke' });
+    return s;
+  }
+
+  function renderReport(r, date) {
+    clear();
+    const when = new Date(r.generated);
+    const c = card('Briefing', true);
+    c.append(top(r.status, r.headline, `Last written ${isNaN(when) ? date : when.toLocaleString(undefined,
+      { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}`));
+    const tiles = el('div', 'tiles');
+    for (const t of r.tiles || []) {
+      const d = el('div', `tile ${t.level || 'ok'}`), v = el('div');
+      v.append(el('span', 'v', t.value ?? '—'), el('span', 'u', t.unit ? ` ${t.unit}` : ''));
+      d.append(el('div', 'l', t.label), v, graph(t), el('div', 'n', t.note || ''));
+      tiles.append(d);
+    }
+    c.append(tiles);
+
+    const items = r.items || [];
+    const ic = card(items.length ? 'Needed a look' : 'Nothing needed a look', true);
+    const open = items.filter((i) => !i.done);
+    if (open.length > 1) {
+      const all = el('button', 'act', 'Clear all');
+      all.onclick = () => api('/api/briefing/done', { method: 'POST', body: JSON.stringify({ keys: open.map((i) => i.key) }) }).then(() => showDay(date));
+      ic.previousElementSibling.append(all);
+    }
+    if (!items.length) return ic.append(el('p', 'note', 'Every check was fine.'));
+    const ul = el('ul', 'items');
+    for (const it of items) {
+      const li = el('li', `${it.level || ''}${it.done ? ' done' : ''}`);
+      const b = el('button', 'act', it.done ? 'Undo' : 'Clear');
+      b.setAttribute('aria-label', `${it.done ? 'Undo' : 'Clear'}: ${it.text}`);
+      b.onclick = () => api(`/api/briefing/${it.done ? 'undo' : 'done'}`, { method: 'POST', body: JSON.stringify({ keys: [it.key] }) }).then(() => showDay(date));
+      li.append(el('span', 't', it.text), b);
+      ul.append(li);
+    }
+    ic.append(ul);
+  }
+
+  function showDay(date) {
+    current = date;
+    api(`/api/briefing/day?d=${encodeURIComponent(date)}`).then((r) => {
+      const e = entries.find((x) => x.id === `b:${date}`);
+      if (e && (e.look !== (r.status === 'attention') || e.note !== r.headline)) {
+        e.look = r.status === 'attention'; e.note = r.headline; drawList();
+      }
+      if (current === date) renderReport(r, date);
+    })
+      .catch((e) => { if (current === date) { clear(); view.append(el('p', 'note', e.message)); } });
+  }
+
+  // ---- security
+
+  // the config's scan buttons: the host runs the scan and copies the results
+  // here, so they show after a reload once it finishes
+  const scans = document.getElementById('scans'), scanMsg = document.getElementById('scan-msg');
+  function scanButtons(list) {
+    for (const s of list) {
+      const b = el('button', 'pill', `Run ${s.label}`);
+      if (s.about) b.title = s.about;
+      b.onclick = () => {
+        b.disabled = true;
+        api('/api/security/run', { method: 'POST', body: JSON.stringify({ scan: s.id }) })
+          .then(() => { scanMsg.textContent = `${s.label} started. Its results show here when it finishes; reload then.`; })
+          .catch((e) => { scanMsg.textContent = e.message === 'HTTP 429' ? 'Already started in the last 10 minutes.' : `Could not start: ${e.message}`; b.disabled = false; });
+      };
+      scans.append(b);
+    }
+    scans.hidden = !list.length;
+  }
+
+  // hardening index by run, drawn at the box's own width so the labels keep their
+  // size, and taller as the box gets wider; each point has its date and value on hover
+  function chart(history, width) {
+    const ns = 'http://www.w3.org/2000/svg', W = Math.max(240, width), H = Math.round(Math.min(300, Math.max(130, W * .2)));
+    const L = 30, R = 12, T = 10, B = 22;
+    const s = document.createElementNS(ns, 'svg');
+    const add = (tag, a, parent = s) => { const e = document.createElementNS(ns, tag); for (const k in a) e.setAttribute(k, a[k]); parent.append(e); return e; };
+    s.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    s.setAttribute('role', 'img');
+    const pts = history.filter((h) => typeof h.index === 'number');
+    s.setAttribute('aria-label', 'Hardening index by run: ' + pts.map((h) => `${h.date} ${h.index}`).join(', '));
+    if (!pts.length) return s;
+    let lo = Math.min(...pts.map((p) => p.index)), hi = Math.max(...pts.map((p) => p.index));
+    lo = Math.max(0, Math.floor((lo - 5) / 10) * 10); hi = Math.min(100, Math.ceil((hi + 5) / 10) * 10);
+    const x = (i) => pts.length === 1 ? (L + W - R) / 2 : L + i * (W - L - R) / (pts.length - 1);
+    const y = (v) => T + (hi - v) / (hi - lo) * (H - T - B);
+    // a gridline every 10, or every 20 when the chart is short
+    const every = (H - T - B) / ((hi - lo) / 10) < 22 ? 20 : 10;
+    for (let v = lo; v <= hi; v += every) {
+      add('line', { x1: L, x2: W - R, y1: y(v), y2: y(v), stroke: 'var(--grid)' });
+      add('text', { x: L - 8, y: y(v) + 4, 'text-anchor': 'end', class: 'axis' }).textContent = v;
+    }
+    // every run's date when there is room for it, else the first and last
+    const room = pts.length === 1 || (W - L - R) / (pts.length - 1) > 90;
+    pts.forEach((p, i) => {
+      const edge = i === 0 || i === pts.length - 1;
+      if (!room && !edge) return;
+      const anchor = pts.length === 1 ? 'middle' : i === 0 ? 'start' : i === pts.length - 1 ? 'end' : 'middle';
+      add('text', { x: x(i), y: H - 4, 'text-anchor': anchor, class: 'axis' }).textContent = day(p.date);
+    });
+    if (pts.length > 1) {
+      const line = pts.map((p, i) => `${i ? 'L' : 'M'}${x(i)},${y(p.index)}`).join('');
+      // the area under the line fades out towards the bottom
+      const grad = add('linearGradient', { id: 'fade', x1: 0, y1: 0, x2: 0, y2: 1 }, add('defs', {}));
+      add('stop', { offset: 0, 'stop-color': 'var(--primary)', 'stop-opacity': .22 }, grad);
+      add('stop', { offset: 1, 'stop-color': 'var(--primary)', 'stop-opacity': 0 }, grad);
+      add('path', { d: `${line}L${x(pts.length - 1)},${y(lo)}L${x(0)},${y(lo)}Z`, fill: 'url(#fade)' });
+      add('path', { d: line, fill: 'none', stroke: 'var(--primary)', 'stroke-width': 2, 'stroke-linejoin': 'round' });
+    }
+    pts.forEach((p, i) => {
+      const g = add('g', {});
+      add('circle', { cx: x(i), cy: y(p.index), r: 12, fill: 'transparent' }, g);      // a wider target for hover
+      add('circle', { cx: x(i), cy: y(p.index), r: 4, fill: 'var(--primary)', stroke: 'var(--bg)', 'stroke-width': 2 }, g);
+      add('title', {}, g).textContent = `${day(p.date, { day: 'numeric', month: 'short', year: 'numeric' })}: ${p.index}`;
+    });
+    return s;
+  }
+
+  function finding(i, kind) {
+    const li = el('li', kind), top = el('div', 'top');
+    const a = el('a', 'id', i.id);
+    a.href = `https://cisofy.com/lynis/controls/${encodeURIComponent((i.id || '').split(':')[0])}/`;
+    a.target = '_blank'; a.rel = 'noopener noreferrer';
+    a.title = 'What this test checks, on cisofy.com';
+    top.append(a);
+    if (i.new) top.append(el('span', 'tag', 'new'));
+    top.append(el('span', 't', i.text || i.description || ''));
+    li.append(top);
+    if (i.details) li.append(el('p', 'more', `Details: ${i.details}`));
+    if (i.solution) li.append(el('p', 'more', `Solution: ${i.solution.replace(/^text:/, '')}`));
+    if (i.description) li.append(el('p', 'more', `Test: ${i.description}`));
+    return li;
+  }
+
+  function list(items, kind) {
+    const ul = el('ul');
+    for (const i of items) ul.append(finding(i, kind));
+    return ul;
+  }
+
+  function showHost(h) {
+    clear('sec');
+    const when = [h.lynis && `Lynis ${h.lynis}`, h.tests != null && `${h.tests} tests`,
+      `run ${day(h.date, { weekday: 'long', day: 'numeric', month: 'long' })}`, h.os].filter(Boolean).join(' · ');
+    const c = card('Lynis', true);
+    c.append(top(h.warnings.length ? 'warn' : '', h.host, when));
+    const tiles = el('div', 'tiles');
+    const tile = (label, value, note, warn) => {
+      const d = el('div', `tile${warn ? ' warn' : ''}`);
+      d.append(el('div', 'l', label), el('div', 'v', value), el('div', 'n', note));
+      tiles.append(d);
+    };
+    const hist = h.history.filter((p) => typeof p.index === 'number'), before = hist.at(-2);
+    tile('Hardening index', h.index ?? '?', before ? `${before.index} on ${day(before.date)}` : 'first run on record');
+    const fresh = (list) => h.previous ? `${list.filter((i) => i.new).length} new since ${day(h.previous)}` : 'first run on record';
+    tile('Warnings', h.warnings.length, fresh(h.warnings), h.warnings.length > 0);
+    tile('Suggestions', h.suggestions.length, fresh(h.suggestions));
+    tile('Resolved', h.previous ? h.resolved.length : '?', h.previous ? `since ${day(h.previous)}` : 'needs a second run');
+    const box = el('div', 'chart');
+    box.append(el('p', 'l', `Hardening index, ${plural(hist.length, 'run')}`));
+    c.append(tiles, box);
+    let drawn = 0;
+    redraw = () => {
+      const w = box.clientWidth;
+      if (w === drawn) return;
+      drawn = w;
+      box.querySelector('svg')?.remove();
+      box.append(chart(h.history, w));
+    };
+    redraw();
+
+    const wc = card(h.warnings.length ? `Warnings (${h.warnings.length})` : 'No warnings');
+    wc.append(h.warnings.length ? list(h.warnings, 'warning') : el('p', 'note', 'Lynis raised no warnings on this run.'));
+
+    const sc = card(`Suggestions (${h.suggestions.length})`);
+    const groups = new Map();
+    for (const i of h.suggestions) {
+      const k = i.category || 'Other';
+      if (!groups.has(k)) groups.set(k, []);
+      groups.get(k).push(i);
+    }
+    for (const [cat, items] of [...groups].sort((a, b) => a[0].localeCompare(b[0]))) {
+      sc.append(el('h3', '', `${cat} (${items.length})`), list(items, 'suggestion'));
+    }
+    if (!groups.size) sc.append(el('p', 'note', 'None.'));
+
+    if (h.resolved.length) {
+      card(`Resolved since ${day(h.previous)} (${h.resolved.length})`).append(list(h.resolved, 'resolved'));
+    }
+
+    // tests skipped on purpose (/etc/lynis/custom.prf on the host), each with its reason
+    const acc = h.accepted || [];
+    if (acc.length) {
+      card(`Accepted on purpose (${acc.length})`).append(list(acc.map((a) => ({ id: a.id, text: a.reason })), 'accepted'));
+    }
+  }
+
+  function showAlerts(alerts) {
+    clear('sec');
+    const c = card('Security alerts', true);
+    c.append(top(alerts.length ? 'warn' : '', plural(alerts.length, 'alert'),
+      'The last 7 days of failed logins, run0 and SELinux denials, newest first'));
+    if (!alerts.length) return c.append(el('p', 'note', 'None in the last 7 days.'));
+    const ul = el('ul');
+    for (const a of alerts) {
+      const li = el('li', `alert${a.priority >= 4 ? ' high' : ''}`), row = el('div', 'top');
+      const t = new Date(a.time * 1000), tm = el('time', '', t.toLocaleString(undefined,
+        { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }));
+      tm.dateTime = t.toISOString();
+      row.append(tm, el('span', 'host', a.host || ''), el('span', 't', a.text || ''));
+      li.append(row);
+      ul.append(li);
+    }
+    c.append(ul);
+  }
+
+  // ---- both lists load at once; the page opens on the newest briefing, or on security from /security
+
+  const open = (id) => entries.find((e) => e.id === id)?.btn?.click();
+
+  const days = api('/api/briefing/history').then((days) => {
+    addEntries(days.map((e) => ({ id: `b:${e.date}`, kind: 'briefing', date: e.date, look: e.status === 'attention',
+      name: day(e.date, { weekday: 'short', day: 'numeric', month: 'short' }), note: e.headline,
+      show: () => showDay(e.date) })));
+  });
+
+  const security = api('/api/security').then((data) => {
+    scanButtons(data.scans || []);
+    const now = new Date().toISOString().slice(0, 10);
+    addEntries([...data.hosts.map((h) => ({ id: `l:${h.host}`, kind: 'lynis', date: h.date || '', look: h.warnings.length > 0,
+      name: h.host, note: `index ${h.index ?? '?'} · ${plural(h.warnings.length, 'warning')} · ${day(h.date)}`,
+      show: () => { current = null; showHost(h); } })),
+    { id: 'alerts', kind: 'alerts', date: now, look: data.alerts.length > 0, name: 'Alerts',
+      note: `${data.alerts.length} in the last 7 days`, show: () => { current = null; showAlerts(data.alerts); } }]);
+  });
+
+  // the newest briefing, or the first host from /security; else whatever loaded, else why nothing did
+  Promise.allSettled([days, security]).then(([d, sec]) => {
+    const want = startOnSecurity ? ['lynis', 'alerts', 'briefing'] : ['briefing', 'lynis', 'alerts'];
+    const first = want.map((k) => entries.find((e) => e.kind === k)).find(Boolean);
+    if (first) return open(first.id);
+    const why = [d, sec].filter((r) => r.status === 'rejected').map((r) => r.reason.message);
+    clear();
+    view.append(el('p', 'note', why.length ? why.join(' · ') : 'No briefings or security results yet.'));
+  });
+})();
+</script>
+</body>
+</html>
