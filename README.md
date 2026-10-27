@@ -1,5 +1,10 @@
 <p align="center"><img src="docs/banner.png" alt="Vantage: a self-hosted operations console for one server and its network" width="100%"></p>
 
+[![CI](https://github.com/zakijss/Vantage/actions/workflows/ci.yml/badge.svg)](https://github.com/zakijss/Vantage/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/zakijss/Vantage)](https://github.com/zakijss/Vantage/releases)
+[![Image](https://github.com/zakijss/Vantage/actions/workflows/image.yml/badge.svg)](https://github.com/zakijss/Vantage/pkgs/container/vantage)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 # Vantage
 
 Vantage is a watch-only operations console for one self-hosted server and the
@@ -16,6 +21,14 @@ loads Three.js and a few small helpers from public CDNs (unpkg, jsDelivr). There
 is nothing to build.
 
 ## Run with Podman or Docker
+
+Each release publishes an image for amd64 and arm64:
+
+```sh
+podman run --rm -p 8106:8106 -e DASH_TOKEN="$(openssl rand -hex 24)" ghcr.io/zakijss/vantage:1
+```
+
+Or build it yourself:
 
 ```sh
 podman build -t vantage .
