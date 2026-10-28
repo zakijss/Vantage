@@ -7,7 +7,7 @@
 #   -v ./config.json:/app/config.json:ro
 # History lives in the /state volume. Host stats need /sys and /proc mounted at
 # /host/sys and /host/proc; compose.yaml does all of this.
-FROM docker.io/library/python:3.12.15-slim-trixie
+FROM docker.io/library/python:3.15.0-slim-trixie
 
 WORKDIR /app
 COPY *.py index.html briefing.html config.example.json ./
