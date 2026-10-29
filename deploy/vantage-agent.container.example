@@ -1,0 +1,30 @@
+# The peer agent, for a laptop or other device that pushes its stats to
+# Vantage. Copy agent.py to ~/.config/vantage/ and this file to
+# ~/.config/containers/systemd/vantage-agent.container on that device.
+[Unit]
+Description=Vantage peer agent (pushes this device's stats to the dashboard)
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+ContainerName=vantage-agent
+Image=docker.io/library/python:3.12-slim
+AutoUpdate=registry
+Network=host
+Exec=python /agent/agent.py
+Environment=DASH_URL=https://homeserver.example.ts.net:8443/api/push
+# The name the config's "peer" uses
+Environment=DASH_NAME=laptop
+Environment=SYS_ROOT=/host/sys
+# DASH_TOKEN must match Vantage's. Keep it out of the unit:
+#   printf 'DASH_TOKEN=%s\n' "<same value as Vantage>" > ~/.config/vantage/secrets.env
+EnvironmentFile=%h/.config/vantage/secrets.env
+Volume=%h/.config/vantage:/agent:ro,z
+Volume=/sys:/host/sys:ro
+
+[Service]
+Restart=on-failure
+RestartSec=30
+
+[Install]
+WantedBy=default.target

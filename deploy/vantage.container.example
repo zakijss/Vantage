@@ -1,0 +1,49 @@
+# A rootless Podman Quadlet for Vantage. Copy it to
+# ~/.config/containers/systemd/vantage.container, change the paths, then
+#   systemctl --user daemon-reload && systemctl --user start vantage.service
+[Unit]
+Description=Vantage ops console
+After=network-online.target
+Wants=network-online.target
+
+[Container]
+ContainerName=vantage
+Image=docker.io/library/python:3.12-slim
+AutoUpdate=registry
+Exec=python /app/server.py
+# An init as PID 1 passes podman's SIGTERM on to Python, which ignores it as PID 1.
+PodmanArgs=--init
+# allow_host_loopback lets Vantage reach services published on the host's
+# 127.0.0.1, at 10.0.2.2. Without it every service reads as down.
+Network=slirp4netns:allow_host_loopback=true
+PublishPort=127.0.0.1:8106:8106
+Environment=PORT=8106
+Environment=HOST_GW=10.0.2.2
+Environment=HOST_SYS=/host/sys
+Environment=HOST_PROC=/host/proc
+Environment=STATE_DIR=/state
+Environment=VANTAGE_CONFIG=/app/config.json
+# Optional: a unix socket for Tailscale Serve to forward to, so your own
+# tailnet login counts instead of the token (see README.md).
+#Environment=DASH_SERVE_SOCK=/state/serve.sock
+# DASH_TOKEN and any other secrets, one NAME=value a line:
+#   printf 'DASH_TOKEN=%s\n' "$(openssl rand -hex 24)" > ~/vantage/secrets.env
+EnvironmentFile=%h/vantage/secrets.env
+# The code, config.json and acks.json, read-only
+Volume=%h/vantage:/app:ro,z
+# History, alert state and the briefing
+Volume=%h/vantage-state:/state:z
+Volume=/sys:/host/sys:ro
+Volume=/proc:/host/proc:ro
+# Each disk the config's "disks" names, read-only at its path
+#Volume=/var/mnt/data:/mnt/data:ro
+#Volume=/var/mnt/backup:/mnt/backup:ro
+
+[Service]
+Restart=on-failure
+RestartSec=15
+# Python ends on SIGTERM with exit 143 when stopped: a stop, not a failure
+SuccessExitStatus=143
+
+[Install]
+WantedBy=default.target

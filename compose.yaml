@@ -1,0 +1,43 @@
+# Vantage with Docker Compose or podman-compose. One command:
+#   DASH_TOKEN="$(openssl rand -hex 24)" docker compose up -d --build
+# or put DASH_TOKEN=... in a file named .env beside this one (Compose reads it)
+# and run `docker compose up -d --build`. Then open http://127.0.0.1:8106/ on
+# this machine and log in with that token.
+# Your own settings: cp config.example.json config.json, edit it, and uncomment
+# the config.json line under volumes. Without it Vantage runs on the defaults.
+services:
+  vantage:
+    build:
+      context: .
+      dockerfile: Containerfile
+    image: localhost/vantage
+    container_name: vantage
+    restart: unless-stopped
+    # Host networking, so the service checks reach ports published on the
+    # host's 127.0.0.1. BIND keeps Vantage itself on loopback; put Tailscale
+    # Serve or a reverse proxy in front of it rather than opening it up.
+    network_mode: host
+    environment:
+      DASH_TOKEN: ${DASH_TOKEN:?set DASH_TOKEN in the shell or in .env (openssl rand -hex 24 makes one)}
+      BIND: 127.0.0.1
+      PORT: "8106"
+      HOST_GW: 127.0.0.1
+      # Optional: findings you have taken on, mounted below
+      # DASH_ACK_FILE: /app/acks.json
+      # Optional: a unix socket for Tailscale Serve (README.md, Security)
+      # DASH_SERVE_SOCK: /state/serve.sock
+    # Other secrets (Beszel login and so on), one NAME=value a line
+    # env_file: secrets.env
+    volumes:
+      # - ./config.json:/app/config.json:ro
+      # - ./acks.json:/app/acks.json:ro
+      - vantage-state:/state
+      - /sys:/host/sys:ro
+      - /proc:/host/proc:ro
+      # Each disk the config's "disks" names, read-only at its path
+      # - /mnt/data:/mnt/data:ro
+
+# A named volume rather than ./state: it takes the image's ownership of /state,
+# so the non-root user in the container can write to it under Docker and Podman.
+volumes:
+  vantage-state:
