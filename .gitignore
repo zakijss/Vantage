@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+
+# Your own settings and secrets
+config.json
+acks.json
+secrets.env
+*.env
+
+# Runtime state when run outside a container (STATE_DIR=./state)
+state/
+*.db
+*.db-wal
+*.db-shm

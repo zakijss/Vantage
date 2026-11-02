@@ -1,0 +1,10 @@
+# Build context for the Containerfile (Podman and Docker both read this file). Only what the image
+# needs goes in; config.json, secrets.env and local state stay out.
+*
+!*.py
+!index.html
+!briefing.html
+!config.example.json
+!LICENSE
+!THIRD-PARTY.md
+!static/
