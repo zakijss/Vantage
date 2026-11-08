@@ -11,19 +11,27 @@
     --cyan: #56d6ff;
     --cyan-dim: rgba(120, 190, 220, 0.6);
     --violet: #b48cff;
-    --green: #4ef0a6;
-    --amber: #ffc94b;
-    --red: #ff5d6c;
+    /* status: ok, warn, bad. Each palette in THEMES may set its own; every set
+       reads at 4.5:1 or more on its own background, and stays apart under
+       red-green and blue-yellow colour blindness. Shape and words carry the
+       state too (.dot, .wn), so colour is never the only cue. */
+    --ok: #4ff5c4;
+    --warn: #ffc94b;
+    --bad: #ff7c8a;
     --ink: #05080d;
     --panel: rgba(10, 16, 24, 0.36);
     /* panel transparency, picked under the colour scheme (Frosted, Glass, Clear) */
     --glass-blur: 7px;
     --line: rgba(255, 255, 255, 0.08);
     --line-strong: rgba(120, 190, 220, 0.22);
+    --hover: rgba(255, 255, 255, 0.06);   /* row and list hover fill */
     --text: #e6f1f9;
     --dim: rgba(230, 241, 249, 0.5);
     --sans: -apple-system, "SF Pro Text", Inter, "Segoe UI", system-ui, sans-serif;
     --mono: "SF Mono", ui-monospace, "Cascadia Mono", "Roboto Mono", Consolas, monospace;
+    --radius: 6px;         /* panels, popovers, overlay cards */
+    --radius-sm: 4px;      /* rows, inputs, buttons and tips inside them */
+    --ease-out: cubic-bezier(0.2, 0, 0, 1);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: var(--ink); overflow: hidden; }
@@ -45,7 +53,7 @@
   .panel {
     background: var(--panel);
     border: 1px solid var(--line);
-    border-radius: 4px;
+    border-radius: var(--radius);
     backdrop-filter: blur(var(--glass-blur)) saturate(140%);
     -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.32);
@@ -58,8 +66,9 @@
     to { opacity: 1; transform: none; } }
   /* collapsible panels */
   .p-tog { margin-left: auto; cursor: pointer; color: var(--dim); font-size: 0.7rem;
-    display: inline-flex; line-height: 1; padding: 0 0.15rem; transition: transform 0.3s, color 0.15s; user-select: none; }
-  .p-tog:hover { color: var(--cyan); }
+    display: inline-flex; line-height: 1; padding: 0 0.15rem; border-radius: var(--radius-sm);
+    transition: transform 0.3s var(--ease-out), color 0.15s; user-select: none; }
+  @media (hover: hover) { .p-tog:hover { color: var(--cyan); } }
   .panel.collapsed .p-tog { transform: rotate(-90deg); }
   .panel.collapsed { flex: 0 0 auto; }
   .has-tog { display: flex; align-items: center; gap: 0.5rem; }
@@ -72,6 +81,10 @@
   .lab.has-tog { flex-wrap: nowrap; white-space: nowrap; }
   .mono { font-family: var(--mono); }
   .hl { color: var(--text); }
+  :focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  /* press: 0.96 over 150ms, on the buttons people tap */
+  .launch-pill, .rail-ic, .ni-btn, .tv-ch, .intel-tab { -webkit-tap-highlight-color: transparent; }
+  .launch-pill:active, .rail-ic:active, .ni-btn:active, .tv-ch:active, .intel-tab:active { scale: 0.96; }
 
   /* header rail */
   /* Above #tip (25), not the 20 it inherits from .hud. A globe tooltip is
@@ -89,8 +102,9 @@
   #brand .glyph { width: 8px; height: 8px; border-radius: 50%;
     background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
   #brand h1 { font-size: 0.82rem; font-weight: 700; letter-spacing: 0.3em; }
-  #clocks { display: flex; gap: 1rem; cursor: pointer; }
-  #clocks .z { text-align: center; }
+  #clocks { display: flex; gap: 1rem; cursor: pointer; color: inherit; padding: 0.2rem 0.4rem;
+    border-radius: var(--radius-sm); }
+  #clocks .z, #clocks .t, #clocks .n { display: block; text-align: center; }
   #clocks .z .t { font-size: 0.74rem; font-weight: 600; }
   #clocks .z .n { font-size: 0.5rem; letter-spacing: 0.16em; color: var(--dim); }
   #rail-right { justify-self: end; font-size: 0.66rem; color: var(--dim);
@@ -100,8 +114,8 @@
     background: transparent; border: 1px solid var(--line-strong); color: var(--dim);
     font-size: 0.74rem; font-weight: 700; font-family: var(--sans); cursor: pointer;
     display: flex; align-items: center; justify-content: center; line-height: 1;
-    transition: color 0.15s, border-color 0.15s; }
-  .rail-ic:hover { color: var(--cyan); border-color: var(--cyan); }
+    transition: color 0.15s, border-color 0.15s, scale 0.15s ease-out; }
+  @media (hover: hover) { .rail-ic:hover { color: var(--cyan); border-color: var(--cyan); } }
   .rail-ic .ic { width: 1.25em; height: 1.25em; }
 
   /* columns */
@@ -133,21 +147,28 @@
     background: var(--cyan); box-shadow: 0 0 8px var(--cyan-dim);
     transition: width 0.9s cubic-bezier(0.22,1,0.36,1); }
   .fill.violet { background: var(--violet); box-shadow: 0 0 8px rgba(180,140,255,0.5); }
-  .fill.hot { background: var(--amber); box-shadow: 0 0 8px rgba(255,201,75,0.5); }
+  .fill.hot { background: var(--warn); box-shadow: 0 0 8px color-mix(in srgb, var(--warn) 50%, transparent); }
 
   .dot { width: 6px; height: 6px; border-radius: 50%; flex: none; }
-  .dot.up   { background: var(--green); box-shadow: 0 0 7px var(--green); }
-  .dot.warn { background: var(--amber); box-shadow: 0 0 7px var(--amber); }
+  /* a shape per state: up a filled circle, warn a diamond, idle and down rings
+     (dim and red), with the state also written beside each service */
+  .dot.up   { background: var(--ok); box-shadow: 0 0 7px var(--ok); }
+  .dot.warn { background: var(--warn); box-shadow: 0 0 7px var(--warn);
+    border-radius: 1px; transform: rotate(45deg) scale(0.9); }
   .dot.idle { background: transparent; border: 1.5px solid var(--dim); box-shadow: none; }
-  .dot.down { background: transparent; border: 1.5px solid var(--red); box-shadow: none; }
+  .dot.down { background: transparent; border: 1.5px solid var(--bad); box-shadow: none; }
+  /* a value that needs a look: the warn colour and the same diamond */
+  .wn { color: var(--warn); white-space: nowrap; }
+  .wn::before { content: ""; display: inline-block; width: 0.42em; height: 0.42em;
+    margin: 0 0.4em 0.08em 0.1em; background: currentColor; border-radius: 1px; transform: rotate(45deg); }
 
   #svc-panel { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; }
   #svc-list { overflow-y: auto; scrollbar-width: none; margin-top: 0.5rem; }
   #svc-list::-webkit-scrollbar { display: none; }
   .svc { display: flex; align-items: center; gap: 0.6rem; font-size: 0.78rem;
     padding: 0.46rem 0.35rem; color: var(--text); text-decoration: none;
-    border-radius: 4px; }
-  .svc:hover { background: rgba(255,255,255,0.06); }
+    border-radius: var(--radius-sm); }
+  @media (hover: hover) { .svc:hover { background: var(--hover); } }
   .svc .ms { margin-left: auto; font-family: var(--mono); font-size: 0.66rem; color: var(--dim); }
 
   /* feeds panel */
@@ -156,7 +177,7 @@
   #feeds .frow:last-child { border-bottom: 0; }
   #feeds .k { color: var(--dim); letter-spacing: 0.06em; }
   #feeds .val { font-family: var(--mono); color: var(--text); }
-  #feeds .up { color: var(--green); } #feeds .dn { color: var(--red); }
+  #feeds .up { color: var(--ok); } #feeds .dn { color: var(--bad); }
 
   /* event log: third block in the left column, square, same width as the
      host and peer panels above it */
@@ -168,18 +189,18 @@
   .ev { display: flex; align-items: baseline; gap: 0.5rem; font-size: 0.62rem;
     padding: 0.24rem 0; opacity: 0; animation: fadein 0.5s forwards;
     text-decoration: none; color: inherit; }
-  a.ev:hover .txt { color: var(--cyan); }
+  @media (hover: hover) { a.ev:hover .txt { color: var(--cyan); } }
   @keyframes fadein { to { opacity: 1; } }
   .ev .tag { font-family: var(--mono); font-size: 0.52rem; font-weight: 700;
     letter-spacing: 0.08em; padding: 0.05rem 0.3rem; border: 1px solid var(--line-strong);
     color: var(--cyan-dim); flex: none; min-width: 44px; text-align: center; }
-  .ev .tag.q { color: var(--amber); } .ev .tag.svc { color: var(--green); }
-  .ev .tag.err { color: var(--red); } .ev .tag.orb { color: var(--cyan); }
+  .ev .tag.q { color: var(--warn); } .ev .tag.svc { color: var(--ok); }
+  .ev .tag.err { color: var(--bad); } .ev .tag.orb { color: var(--cyan); }
   .ev .txt { color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .ev .ago { margin-left: auto; font-family: var(--mono); font-size: 0.52rem; color: var(--dim); flex: none; }
 
   #tip { position: fixed; z-index: 25; pointer-events: none; display: none;
-    background: var(--panel); border: 1px solid var(--line-strong); border-radius: 3px;
+    background: var(--panel); border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
     padding: 0.45rem 0.65rem; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
     max-width: 220px; overflow-wrap: anywhere; }
   #tip .tn { font-size: 0.6rem; font-weight: 700; letter-spacing: 0.14em; color: var(--cyan); }
@@ -202,22 +223,24 @@
     color: var(--cyan); background: var(--panel); border: 1px solid var(--line-strong);
     border-radius: 999px; padding: 0.5rem 1.1rem; cursor: pointer; text-decoration: none;
     backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
-    box-shadow: 0 6px 20px rgba(0,0,0,0.4); transition: color 0.15s, border-color 0.15s, box-shadow 0.2s; }
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4); transition: color 0.15s, border-color 0.15s, box-shadow 0.2s, scale 0.15s ease-out; }
   .launch-pill[hidden] { display: none; }
-  .launch-pill:hover { color: #fff; border-color: var(--cyan);
-    box-shadow: 0 6px 26px var(--cyan-dim); }
+  @media (hover: hover) { .launch-pill:hover { color: var(--text); border-color: var(--cyan);
+    box-shadow: 0 6px 26px var(--cyan-dim); } }
   #dynacat-btn { color: var(--violet); }
-  #dynacat-btn:hover { border-color: var(--violet); box-shadow: 0 6px 26px rgba(180,140,255,0.28); }
+  @media (hover: hover) { #dynacat-btn:hover { border-color: var(--violet); box-shadow: 0 6px 26px rgba(180,140,255,0.28); } }
 
   /* expand overlay */
   #expand { position: fixed; inset: 0; z-index: 40; display: flex;
     align-items: center; justify-content: center;
     background: rgba(3,6,11,0.55); backdrop-filter: blur(3px);
-    transition: opacity 0.25s; }
-  #expand.ex-hidden { opacity: 0; pointer-events: none; }
+    transition: opacity 0.25s, visibility 0.25s; }
+  /* visibility too, so a closed overlay's buttons and inputs drop out of the
+     tab order and the accessibility tree; it flips after the fade */
+  #expand.ex-hidden { opacity: 0; pointer-events: none; visibility: hidden; }
   .ex-card { width: min(680px, 92vw); max-height: 88vh; overflow-y: auto; position: relative; }
   #ex-tip { position: absolute; z-index: 3; pointer-events: none; display: none;
-    background: rgba(5,8,13,0.94); border: 1px solid var(--line-strong); border-radius: 3px;
+    background: rgba(5,8,13,0.94); border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
     padding: 0.2rem 0.45rem; font-family: var(--mono); font-size: 0.56rem; color: var(--text);
     white-space: nowrap; transform: translateY(-100%); }
   .ex-head { display: flex; align-items: center; justify-content: space-between;
@@ -225,7 +248,7 @@
   .ex-title { font-size: 0.86rem; font-weight: 700; letter-spacing: 0.18em; }
   .ex-x { background: none; border: 0; color: var(--dim); font-size: 0.9rem; cursor: pointer;
     display: inline-flex; align-items: center; padding: 0.1rem; }
-  .ex-x:hover { color: var(--text); }
+  @media (hover: hover) { .ex-x:hover { color: var(--text); } }
   .ex-grid { display: grid; grid-template-columns: 1fr; gap: 0.9rem; }
   .ex-chart .lab { margin-bottom: 0.3rem; }
   .ex-chart canvas { width: 100%; height: 88px; display: block; cursor: crosshair; }
@@ -234,33 +257,34 @@
     font-size: 0.6rem; color: var(--dim); }
   .ex-foot a { color: var(--cyan); text-decoration: none; letter-spacing: 0.06em; }
   .panel.clickable { cursor: pointer; }
-  .panel.clickable:hover { border-color: var(--line-strong); }
+  @media (hover: hover) { .panel.clickable:hover { border-color: var(--line-strong); } }
 
   /* node info + about popovers */
   #nodeinfo, #about, #news, #headlines, #tv, #search, #cities, #intel { position: fixed; inset: 0; z-index: 42; display: flex;
     align-items: center; justify-content: center;
-    background: rgba(3,6,11,0.55); backdrop-filter: blur(3px); transition: opacity 0.25s; }
+    background: rgba(3,6,11,0.55); backdrop-filter: blur(3px); transition: opacity 0.25s, visibility 0.25s; }
   #nodeinfo.ex-hidden, #about.ex-hidden, #news.ex-hidden,
-  #headlines.ex-hidden, #tv.ex-hidden, #search.ex-hidden, #cities.ex-hidden, #intel.ex-hidden { opacity: 0; pointer-events: none; }
+  #headlines.ex-hidden, #tv.ex-hidden, #search.ex-hidden, #cities.ex-hidden, #intel.ex-hidden { opacity: 0; pointer-events: none; visibility: hidden; }
   #clocks .z .w { font-size: 0.5rem; color: var(--dim); margin-left: 0.25em; }
   #city-in { width: 100%; font: inherit; font-size: 0.85rem; color: var(--text); background: rgba(255,255,255,0.05);
-    border: 1px solid var(--line-strong); border-radius: 4px; padding: 0.6rem 0.75rem; outline: none; margin: 0.5rem 0; }
+    border: 1px solid var(--line-strong); border-radius: var(--radius-sm); padding: 0.6rem 0.75rem; outline: none; margin: 0.5rem 0; }
   #city-in:focus { border-color: var(--cyan); }
   #city-list { max-height: min(56vh, 460px); overflow-y: auto; scrollbar-width: thin; display: flex; flex-direction: column; gap: 0.1rem; }
   .cy-act { margin-left: auto; flex: none; background: none; border: 0; font: inherit; font-size: 0.62rem; letter-spacing: 0.06em;
     color: var(--cyan); cursor: pointer; padding: 0.2rem 0.3rem; }
-  .cy-act.del { color: var(--red); }
+  .cy-act.del { color: var(--bad); }
   .cy-row { display: flex; align-items: baseline; gap: 0.6rem; }
   #search { align-items: flex-start; padding-top: 14vh; }
   #search-in { width: 100%; font: inherit; font-size: 0.85rem; color: var(--text);
-    background: rgba(255,255,255,0.05); border: 1px solid var(--line-strong); border-radius: 4px;
+    background: rgba(255,255,255,0.05); border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
     padding: 0.6rem 0.75rem; outline: none; }
   #search-in:focus { border-color: var(--cyan); }
   #search-list { margin-top: 0.5rem; max-height: min(52vh, 420px); overflow-y: auto;
     display: flex; flex-direction: column; gap: 0.1rem; scrollbar-width: thin; }
   .sr { display: flex; align-items: baseline; gap: 0.6rem; padding: 0.45rem 0.55rem;
-    border-radius: 4px; border: 1px solid transparent; cursor: pointer; }
-  .sr:hover, .sr.sel { background: rgba(255,255,255,0.06); border-color: var(--line); }
+    border-radius: var(--radius-sm); border: 1px solid transparent; cursor: pointer; }
+  .sr.sel { background: var(--hover); border-color: var(--line); }
+  @media (hover: hover) { .sr:hover { background: var(--hover); border-color: var(--line); } }
   .sr .n { font-size: 0.72rem; color: var(--text); flex: 1; min-width: 0;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .sr .k { font-family: var(--mono); font-size: 0.52rem; color: var(--dim); flex: none; }
@@ -268,10 +292,10 @@
   #news-list, #hl-list { max-height: min(56vh, 460px); overflow-y: auto; scrollbar-width: thin;
     margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.1rem; }
   .nw { display: block; text-decoration: none; padding: 0.5rem 0.55rem;
-    border-radius: 4px; border: 1px solid transparent; }
-  .nw:hover { background: rgba(255,255,255,0.05); border-color: var(--line); }
+    border-radius: var(--radius-sm); border: 1px solid transparent; }
+  @media (hover: hover) { .nw:hover { background: var(--hover); border-color: var(--line); } }
   .nw-t { font-size: 0.72rem; line-height: 1.45; color: var(--text); }
-  .nw:hover .nw-t { color: #fff; }
+  @media (hover: hover) { .nw:hover .nw-t { color: var(--text); } }
   .nw-m { display: flex; gap: 0.5rem; margin-top: 0.2rem;
     font-family: var(--mono); font-size: 0.55rem; color: var(--dim); }
   .nw-a { margin-left: auto; flex: none; }
@@ -280,18 +304,20 @@
   /* layers popover */
   #layerbox { position: fixed; z-index: 44; top: 46px; right: 12px; width: 226px;
     max-height: calc(100vh - 70px); overflow-y: auto; scrollbar-width: none;
-    background: var(--panel); border: 1px solid var(--line-strong); border-radius: 6px;
+    background: var(--panel); border: 1px solid var(--line-strong); border-radius: var(--radius);
     padding: 0.7rem 0.8rem; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
-    box-shadow: 0 10px 30px rgba(0,0,0,0.45); transition: opacity 0.2s, transform 0.2s; }
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45); transition: opacity 0.2s, transform 0.2s var(--ease-out), visibility 0.2s; }
   #layerbox::-webkit-scrollbar { display: none; }
-  #layerbox.pal-hidden { opacity: 0; pointer-events: none; transform: translateY(-6px); }
+  #layerbox.pal-hidden { opacity: 0; pointer-events: none; transform: translateY(-6px); visibility: hidden; }
   .lg-title { font-size: 0.5rem; font-weight: 600; letter-spacing: 0.16em;
     text-transform: uppercase; color: var(--dim); margin: 0.6rem 0 0.3rem; }
   .lg-title:first-child { margin-top: 0; }
+  .ly-row, .pal-row, .p-tog, #clocks { font-family: inherit; background: none; border: 0; text-align: start; }
+  .ly-row, .pal-row { width: 100%; }
   .ly-row { display: flex; align-items: center; gap: 0.5rem; cursor: pointer;
-    padding: 0.32rem 0.35rem; border-radius: 4px; font-size: 0.63rem;
+    padding: 0.32rem 0.35rem; border-radius: var(--radius-sm); font-size: 0.63rem;
     border: 1px solid transparent; }
-  .ly-row:hover { background: rgba(255,255,255,0.05); }
+  @media (hover: hover) { .ly-row:hover { background: var(--hover); } }
   .ly-row .sw { width: 8px; height: 8px; border-radius: 2px; flex: none;
     border: 1px solid currentColor; }
   .ly-row.on .sw { background: currentColor; box-shadow: 0 0 7px currentColor; }
@@ -304,24 +330,24 @@
 
   /* palette popover */
   #palette { position: fixed; z-index: 44; top: 46px; right: 12px; width: 190px;
-    background: var(--panel); border: 1px solid var(--line-strong); border-radius: 6px;
+    background: var(--panel); border: 1px solid var(--line-strong); border-radius: var(--radius);
     padding: 0.7rem 0.8rem; backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
-    box-shadow: 0 10px 30px rgba(0,0,0,0.45); transition: opacity 0.2s, transform 0.2s; }
-  #palette.pal-hidden { opacity: 0; pointer-events: none; transform: translateY(-6px); }
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45); transition: opacity 0.2s, transform 0.2s var(--ease-out), visibility 0.2s; }
+  #palette.pal-hidden { opacity: 0; pointer-events: none; transform: translateY(-6px); visibility: hidden; }
   .pal-title { font-size: 0.55rem; font-weight: 600; letter-spacing: 0.16em;
     text-transform: uppercase; color: var(--dim); margin-bottom: 0.55rem; }
   #pal-list { display: flex; flex-direction: column; gap: 0.35rem; }
   .pal-row { display: flex; align-items: center; gap: 0.5rem; cursor: pointer;
-    padding: 0.28rem 0.35rem; border-radius: 4px; border: 1px solid transparent;
+    padding: 0.28rem 0.35rem; border-radius: var(--radius-sm); border: 1px solid transparent;
     font-size: 0.64rem; color: var(--dim); transition: background 0.12s, color 0.12s; }
-  .pal-row:hover { background: rgba(255,255,255,0.05); color: var(--text); }
+  @media (hover: hover) { .pal-row:hover { background: var(--hover); color: var(--text); } }
   .pal-row.active { border-color: var(--line-strong); color: var(--text); }
   .pal-sw { display: flex; gap: 3px; }
   .pal-title.sub { margin-top: 0.8rem; }
   /* F toggles a frame-rate readout, for checking the 60 fps target */
   #fps { position: fixed; z-index: 45; left: 12px; bottom: 12px; font-family: var(--mono);
     font-size: 0.6rem; color: var(--cyan); background: var(--panel); border: 1px solid var(--line-strong);
-    border-radius: 3px; padding: 0.25rem 0.5rem; pointer-events: none; }
+    border-radius: var(--radius-sm); padding: 0.25rem 0.5rem; pointer-events: none; }
   #fps[hidden] { display: none; }
   /* panels and links the config leaves out (no peer, no dashboard) */
   [hidden] { display: none !important; }
@@ -337,11 +363,12 @@
   #tv-chans { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.55rem 0 0.65rem; }
   .tv-ch { font-family: var(--sans); font-size: 0.58rem; font-weight: 700; letter-spacing: 0.12em;
     text-transform: uppercase; color: var(--dim); background: transparent; cursor: pointer;
-    border: 1px solid var(--line); border-radius: 999px; padding: 0.34rem 0.75rem; }
-  .tv-ch:hover { color: var(--text); border-color: var(--line-strong); }
+    border: 1px solid var(--line); border-radius: 999px; padding: 0.34rem 0.75rem;
+    transition: color 0.15s, border-color 0.15s, scale 0.15s ease-out; }
+  @media (hover: hover) { .tv-ch:hover { color: var(--text); border-color: var(--line-strong); } }
   .tv-ch.on { color: var(--cyan); border-color: var(--cyan); }
   #tv-frame { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #000;
-    border-radius: 4px; overflow: hidden; }
+    border-radius: var(--radius-sm); overflow: hidden; }
   #tv-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
   .tv-note { margin-top: 0.5rem; font-size: 0.55rem; color: var(--dim); }
   .pal-sw i { width: 9px; height: 9px; border-radius: 50%; display: block; }
@@ -355,7 +382,7 @@
   #ni-stats { margin-top: 0.8rem; }
   #ni-photo { margin-top: 0.75rem; display: none; }
   #ni-photo img { display: block; width: 100%; aspect-ratio: 8 / 5; object-fit: cover;
-    border-radius: 4px; border: 1px solid var(--line); background: rgba(255,255,255,0.04); }
+    border-radius: var(--radius-sm); border: 1px solid var(--line); background: rgba(255,255,255,0.04); }
   #ni-photo .cap { margin-top: 0.3rem; font-family: var(--mono); font-size: 0.52rem;
     color: var(--dim); line-height: 1.5; }
   #ni-stats .nis { display: flex; justify-content: space-between; align-items: baseline;
@@ -371,15 +398,15 @@
     background: var(--panel); border: 1px solid var(--line-strong);
     backdrop-filter: blur(var(--glass-blur)); -webkit-backdrop-filter: blur(var(--glass-blur));
     box-shadow: 0 8px 24px rgba(0,0,0,0.45); animation: toastIn 0.3s ease both; }
-  .toast.down { border-color: var(--red); color: #ffd7db; box-shadow: 0 0 22px rgba(255,93,108,0.35); }
-  .toast.up { border-color: var(--green); color: #c9ffe6; }
+  .toast.down { border-color: var(--bad); box-shadow: 0 0 22px color-mix(in srgb, var(--bad) 35%, transparent); }
+  .toast.up { border-color: var(--ok); }
   @keyframes toastIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }
-  @keyframes alertFlash { 0%,100% { border-color: var(--line); } 50% { border-color: var(--red); box-shadow: 0 0 26px rgba(255,93,108,0.4); } }
+  @keyframes alertFlash { 0%,100% { border-color: var(--line); } 50% { border-color: var(--bad); box-shadow: 0 0 26px color-mix(in srgb, var(--bad) 40%, transparent); } }
   #svc-panel.alarm { animation: alertFlash 1s ease-in-out 3; }
   .ni-btn { font-size: 0.6rem; font-weight: 600; letter-spacing: 0.08em; text-decoration: none;
-    color: var(--cyan); border: 1px solid var(--line-strong); border-radius: 3px;
-    padding: 0.32rem 0.6rem; transition: color 0.15s, border-color 0.15s; }
-  .ni-btn:hover { color: #fff; border-color: var(--cyan); }
+    color: var(--cyan); border: 1px solid var(--line-strong); border-radius: var(--radius-sm);
+    padding: 0.32rem 0.6rem; transition: color 0.15s, border-color 0.15s, scale 0.15s ease-out; }
+  @media (hover: hover) { .ni-btn:hover { color: var(--text); border-color: var(--cyan); } }
 
   /* loading screen */
   #load { position: fixed; inset: 0; z-index: 60; display: flex; flex-direction: column;
@@ -499,11 +526,27 @@
   @media (max-width: 680px) and (prefers-reduced-motion: reduce) {
     #stats-drawer, #stats-drawer.open { transition: none; }
   }
+  /* Reduced motion: panels and toasts fade in place instead of sliding, popovers
+     no longer drop, nothing flashes or sweeps. The globe stops turning on its
+     own and its pulses and orbits hold still (see `calm` in the render loop). */
+  @keyframes fadeUp0 { from { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    .panel { animation-name: fadeUp0; }
+    .toast { animation-name: fadeUp0; }
+    #svc-panel.alarm { animation: none; }
+    #layerbox.pal-hidden, #palette.pal-hidden { transform: none; }
+    .fill, .p-tog { transition: none; }
+    .panel { transition-duration: 0.01s; }   /* togglePanel waits for its transitionend */
+    #load .track .lead { animation: none; transform: translateX(75%); }
+    .launch-pill:active, .rail-ic:active, .ni-btn:active, .tv-ch:active, .intel-tab:active { scale: none; }
+  }
 
   /* light theme: flip the hardcoded-dark chrome */
   body.theme-light #rail { background: rgba(255,255,255,0.72); border-bottom-color: rgba(20,30,45,0.10); }
   body.theme-light #vig { background: radial-gradient(ellipse at 50% 44%, transparent 55%, rgba(120,140,165,0.32) 100%); }
   body.theme-light .bar { background: rgba(20,30,45,0.10); }
+  /* the accent at 60% is too faint to read on a light ground */
+  body.theme-light .ev :where(.tag) { color: var(--cyan); }   /* :where keeps .tag.q and the rest on top */
   body.theme-light #tip, body.theme-light #ex-tip { background: rgba(255,255,255,0.92); }
   body.theme-light #toast .toast { background: rgba(255,255,255,0.85); }
   body.theme-light #load { background: radial-gradient(ellipse at 50% 40%, #dfe6ee 0%, #eef2f6 70%); }
@@ -513,17 +556,17 @@
   @media (max-width: 680px) { body.theme-light #stats-drawer { background: rgba(238, 242, 246, 0.82); } }
 
 /* INTEL panel tabs (attack surface / flights / image) */
-.intel-tab{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);
-  color:rgba(255,255,255,.72);font:inherit;font-size:.74rem;letter-spacing:.04em;
-  padding:.3rem .7rem;border-radius:999px;cursor:pointer;transition:background .2s,color .2s}
-.intel-tab:hover{color:#fff}
-.intel-tab.on{background:rgba(255,255,255,.14);color:#fff}
-.intel-flag{color:#e7b35a}
-.intel-ok{color:#7fcf9a}
+.intel-tab{background:transparent;border:1px solid var(--line-strong);
+  color:var(--dim);font:inherit;font-size:.74rem;letter-spacing:.04em;
+  padding:.3rem .7rem;border-radius:999px;cursor:pointer;transition:background-color .15s,color .15s,scale .15s ease-out}
+@media (hover: hover){ .intel-tab:hover{color:var(--text)} }
+.intel-tab.on{border-color:var(--cyan);color:var(--text)}
+.intel-flag{color:var(--warn)}
+.intel-ok{color:var(--ok)}
 #intel-body .nw-t{font-weight:600}
 #intel input[type=text],#intel input[type=search]{width:100%;box-sizing:border-box;
-  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.14);color:#fff;
-  font:inherit;font-size:.82rem;padding:.42rem .6rem;border-radius:7px;margin:.3rem 0}
+  background:rgba(255,255,255,.05);border:1px solid var(--line-strong);color:var(--text);
+  font:inherit;font-size:.82rem;padding:.42rem .6rem;border-radius:var(--radius-sm);margin:.3rem 0}
 </style>
 </head>
 <body>
@@ -574,7 +617,7 @@
         <path class="hb-o" d="M3 4.5h10M3 8h10M3 11.5h10"/>
         <path class="hb-x" d="M4 4l8 8M12 4l-8 8"/></svg></button>
     <span class="glyph"></span><h1>VANTAGE</h1></div>
-  <div id="clocks" title="Your cities: time and weather. Click to change them (W)"></div>
+  <button id="clocks" type="button" aria-label="Cities: time and weather (W)" title="Your cities: time and weather. Click to change them (W)"></button>
   <div id="rail-right">
     <span id="rail-status"></span>
     <button id="min-btn" class="rail-ic" title="Minimise all panels (M)"><svg class="ic" aria-hidden="true"><use href="#i-collapse_all"/></svg></button>
@@ -703,7 +746,7 @@
     <div class="ex-head"><span class="ex-title">CITIES</span>
       <button class="ex-x" id="cities-close" aria-label="Close"><svg class="ic" aria-hidden="true"><use href="#i-close"/></svg></button></div>
     <div class="lab" id="cities-sub">Time and weather. Search any city to see it, then add it to the clocks.</div>
-    <input id="city-in" type="search" placeholder="Search a city, then Enter" autocomplete="off" spellcheck="false">
+    <input id="city-in" type="search" aria-label="Search a city" placeholder="Search a city, then Enter" autocomplete="off" spellcheck="false">
     <div id="city-list"></div>
   </div>
 </div>
@@ -744,7 +787,7 @@
 
 <div id="search" class="ex-hidden">
   <div class="ni-card panel" style="width:min(520px,94vw)">
-    <input id="search-in" type="search" placeholder="Search the map: places, countries, events…" autocomplete="off" spellcheck="false">
+    <input id="search-in" type="search" aria-label="Search the map" placeholder="Search the map: places, countries, events…" autocomplete="off" spellcheck="false">
     <div id="search-list"></div>
     <div class="tv-note">Enter to fly there · Esc to close · searches what the layers have loaded</div>
   </div>
@@ -762,7 +805,7 @@
   <div id="glass-list"></div>
 </div>
 
-<div id="toast"></div>
+<div id="toast" role="status"></div>
 <div id="fps" hidden></div>
 
 <div id="tip"><div class="tn"></div><div class="td"></div><div class="tm"></div></div>
@@ -872,7 +915,7 @@ function resize() {
 }
 resize(); addEventListener('resize', resize);
 
-const C = { cyan: 0x56d6ff, green: 0x4ef0a6, amber: 0xffc94b, red: 0xff5d6c,
+const C = { cyan: 0x56d6ff, green: 0x4ff5c4, amber: 0xffc94b, red: 0xff7c8a,
   violet: 0xb48cff, map: 0x123441, grey: 0x8a96a3 };
 const add = { transparent: true, blending: THREE.AdditiveBlending, depthWrite: false };
 // material buckets the palette recolours: accent items, map dots, map lines
@@ -1602,7 +1645,7 @@ function drawSvcChart(cv, samples){
   const vals=samples.map(s=>s.ms==null?0:s.ms);
   const mx=Math.max(20,...vals);
   const col=getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim()||'#56d6ff';
-  const red=getComputedStyle(document.documentElement).getPropertyValue('--red').trim()||'#ff5d6c';
+  const red=getComputedStyle(document.documentElement).getPropertyValue('--bad').trim()||'#ff7c8a';
   // outage bands first, so the line draws over them
   ctx.fillStyle=red; ctx.globalAlpha=0.28;
   samples.forEach((s,i)=>{ if(s.status && s.status!=='up')
@@ -1724,7 +1767,7 @@ function renderHud(data){
   $('temp-v').textContent=h.temp!=null?`${h.temp.toFixed(0)}°C`:'--';
   $('up-v').textContent=fmtUp(h.uptime); $('kern-v').textContent=h.kernel??'--';
   $('bk-v').textContent = data.backup?.age!=null ? `${fmtDur(data.backup.age)} ago` : '--';
-  { const bk=$('bk-v'); if(bk) bk.style.color = (data.backup?.age>108000) ? 'var(--amber)' : ''; }  // >30h stale
+  { const bk=$('bk-v'); if(bk) bk.classList.toggle('wn', data.backup?.age>108000); }  // >30h stale
 
   const lap=PEER?data.peers?.[PEER.name]:null, fresh=lap?.fresh;
   $('lap-dot').className=`dot ${fresh?'up':'down'}`; $('llink-v').textContent=fresh?'tailnet':'no signal';
@@ -1743,7 +1786,7 @@ function renderHud(data){
   for (const s of data.services){ const a=document.createElement(s.url?'a':'div'); a.className='svc';
     if (s.url){ a.href=safeUrl(s.url); a.target='_blank'; a.rel='noopener'; }
     if (s.uptime!=null) a.title=`${s.uptime.toFixed(2)}% uptime · ${s.status} for ${fmtDur(Date.now()/1000-s.since)}`;
-    a.innerHTML=`<span class="dot ${s.status}"></span>${s.name}<span class="ms">${s.status==='down'?'OFFLINE':s.status==='idle'?'ASLEEP':s.ms+'ms'}</span>`;
+    a.innerHTML=`<span class="dot ${s.status}"></span>${s.name}<span class="ms">${s.status==='down'?'OFFLINE':s.status==='idle'?'ASLEEP':s.status==='warn'?'HTTP '+s.code:s.ms+'ms'}</span>`;
     list.appendChild(a);
     // latency history for the node card
     if (freshCheck){
@@ -1767,7 +1810,7 @@ function renderHud(data){
   if(cert.days!=null){
     const d=Math.round(cert.days);
     $('cert-v').innerHTML = d<CFG.cert_days ? `<span class="dn">${d}d</span>`
-      : d<30 ? `<span style="color:var(--amber)">${d}d</span>` : `${d}d`;
+      : d<30 ? `<span class="wn">${d}d</span>` : `${d}d`;
   } else if(cert.error){ $('cert-v').innerHTML='<span class="dn">unreachable</span>'; }
 }
 let lastWx = '';
@@ -2779,6 +2822,8 @@ setInterval(()=>{ if (!document.hidden) advanceAircraft(); }, 1000);
 /* ── the popover ── */
 function paintLayerBox(){
   const box = $('layer-list');
+  // the list is rebuilt on every change; keep keyboard focus on the same layer
+  const had = box.contains(document.activeElement) ? document.activeElement.dataset.k : null;
   box.innerHTML = '';
   let grp = null;
   for (const d of LAYER_DEFS){
@@ -2787,15 +2832,19 @@ function paintLayerBox(){
       const h = document.createElement('div'); h.className='lg-title'; h.textContent=grp;
       box.appendChild(h);
     }
-    const row = document.createElement('div');
+    const row = document.createElement('button');
+    row.type = 'button';
     row.className = 'ly-row' + (layerOn[d.k] ? ' on' : '');
+    row.setAttribute('aria-pressed', String(!!layerOn[d.k]));
     row.style.color = d.col;
-    row.innerHTML = `<span class="sw"></span><span class="nm"></span><span class="ct"></span>`;
+    row.innerHTML = `<span class="sw" aria-hidden="true"></span><span class="nm"></span><span class="ct"></span>`;
     row.querySelector('.nm').textContent = d.label;
     const c = layerCount[d.k];
     row.querySelector('.ct').textContent = layerOn[d.k] && c!=null ? c : '';
     row.onclick = ()=>toggleLayer(d.k);
+    row.dataset.k = d.k;
     box.appendChild(row);
+    if (d.k === had) row.focus();
   }
   const live = LAYER_DEFS.filter(d=>!d.local && layerOn[d.k]).length;
   $('layer-note').textContent = live
@@ -2894,11 +2943,11 @@ async function pollWorld(){
       // a southward (negative) Bz is what lets the solar wind couple into the
       // magnetosphere; below about -10 nT for a while, storms follow
       $('sw-v').innerHTML = `${Math.round(w.space.speed)} km/s` + (bz!=null
-        ? ` · Bz <span class="${bz<=-10?'dn':''}" ${bz<=-5&&bz>-10?'style="color:var(--amber)"':''}>${bz>0?'+':''}${bz}</span> nT` : ''); }
+        ? ` · Bz <span class="${bz<=-10?'dn':bz<=-5?'wn':''}">${bz>0?'+':''}${bz}</span> nT` : ''); }
     if (w.air && w.air.aqi!=null){
       const a = w.air.aqi, band = a<=50?'good':a<=100?'moderate':a<=150?'unhealthy for some':'unhealthy';
-      $('aqi-v').innerHTML = `${a} <span class="${a>100?'dn':''}" ${a>50&&a<=100?'style="color:var(--amber)"':''}>${band}</span>`; }
-    if (w.kp){ const k=w.kp.kp; $('kp-v').innerHTML=`${k.toFixed(1)} ${k>=5?'<span class="dn">storm</span>':k>=4?'<span style="color:var(--amber)">active</span>':'quiet'}`; }
+      $('aqi-v').innerHTML = `${a} <span class="${a>100?'dn':a>50?'wn':''}">${band}</span>`; }
+    if (w.kp){ const k=w.kp.kp; $('kp-v').innerHTML=`${k.toFixed(1)} ${k>=5?'<span class="dn">storm</span>':k>=4?'<span class="wn">active</span>':'quiet'}`; }
     if (w.launch){ launchNet=w.launch.net?Date.parse(w.launch.net):null;
       const nm=(w.launch.name||'').split('|')[0].trim();
       $('launch-v').textContent=nm.length>18?nm.slice(0,18)+'…':nm;
@@ -2977,9 +3026,9 @@ const wxText = w => w ? `${Math.round(w.temp)}° ${WMO[w.code] ?? ''}` : '';
 function paintClocks(){
   $('clocks').innerHTML = '';
   for (const c of cities.slice(0, 7)){
-    const z = document.createElement('div'); z.className = 'z';
-    const t = document.createElement('div'); t.className = 't mono'; t.dataset.tz = c.tz; t.textContent = '--:--';
-    const n = document.createElement('div'); n.className = 'n'; n.textContent = c.n;
+    const z = document.createElement('span'); z.className = 'z';
+    const t = document.createElement('span'); t.className = 't mono'; t.dataset.tz = c.tz; t.textContent = '--:--';
+    const n = document.createElement('span'); n.className = 'n'; n.textContent = c.n;
     const w = cityWx[cityKey(c)];
     if (w){ const s = document.createElement('span'); s.className = 'w'; s.textContent = Math.round(w.temp) + '°'; n.appendChild(s); }
     z.append(t, n); $('clocks').appendChild(z);
@@ -3512,7 +3561,12 @@ $('ni-close').onclick=()=>$('nodeinfo').classList.add('ex-hidden');
 $('nodeinfo').addEventListener('click', e=>{ if(e.target.id==='nodeinfo') $('nodeinfo').classList.add('ex-hidden'); });
 { const cp=document.querySelectorAll('#col-left .panel');
   if(cp[0]){ cp[0].classList.add('clickable'); cp[0].onclick=()=>openExpand('server'); }
-  if(cp[1]){ cp[1].classList.add('clickable'); cp[1].onclick=()=>openExpand('laptop'); } }
+  if(cp[1]){ cp[1].classList.add('clickable'); cp[1].onclick=()=>openExpand('laptop'); }
+  // the whole panel takes a click; the CPU figure is its keyboard stop
+  cp.forEach((p,i)=>{ const b=p.querySelector('.big'); if(!b||i>1) return;
+    b.tabIndex=0; b.setAttribute('role','button');
+    b.setAttribute('aria-label', `History charts for ${i ? (PEER?.label || 'the peer') : HOST_LABEL}`);
+    b.addEventListener('keydown', e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); p.click(); } }); }); }
 /* phone stats drawer */
 {
   const btn = $('stats-btn'), drawer = $('stats-drawer');
@@ -3543,6 +3597,7 @@ function togglePanel(p){
   const shutH = head.getBoundingClientRect().height
     + parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
     + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);
+  p.querySelector('.p-tog')?.setAttribute('aria-expanded', String(p.classList.contains('collapsed')));
   if (!p.classList.contains('collapsed')){
     p.style.maxHeight=p.scrollHeight+'px';
     requestAnimationFrame(()=>{ p.classList.add('collapsed'); p.style.maxHeight=shutH+'px'; });
@@ -3559,8 +3614,10 @@ const allPanels=()=>[...document.querySelectorAll('.col .panel, #log')];
 document.querySelectorAll('.col .panel, #log').forEach((p,i)=>{
   const head=p.querySelector('.dev-head, .lab'); if(!head) return;
   head.classList.add('has-tog');
-  const t=document.createElement('span'); t.className='p-tog'; t.innerHTML=ic('expand_more');
+  const t=document.createElement('button'); t.type='button'; t.className='p-tog'; t.innerHTML=ic('expand_more');
   t.title='collapse';
+  t.setAttribute('aria-label', `${(head.firstElementChild || head).textContent.trim() || 'This'} panel`);   // aria-expanded says open or shut
+  t.setAttribute('aria-expanded', 'true');
   t.onclick=e=>{ e.stopPropagation(); togglePanel(p); };
   head.appendChild(t);
   // The whole header is the target: the 12px chevron alone is unusable with a
@@ -3602,11 +3659,12 @@ const THEMES = [
   // Popular palettes. up/warn/down tint the service nodes per theme; Crimson is an
   // all-red night-vision mode (red preserves dark adaptation), down = brightest.
   { name:'Crimson',     accent:'#ff5555', sec:'#ff8a8a', dot:0x7a2626, line:0x521c1c, bg:0x0a0304, up:0xff7a7a, warn:0xff9a4d, down:0xff2e2e, devOff:0x5a2424 },
-  { name:'Nord',        accent:'#88c0d0', sec:'#b48ead', dot:0x4c566a, line:0x3b4252, bg:0x242933, up:0xa3be8c, warn:0xebcb8b, down:0xbf616a },
-  { name:'Tokyo Night', accent:'#7aa2f7', sec:'#bb9af7', dot:0x3b4261, line:0x2a2e42, bg:0x1a1b26, up:0x9ece6a, warn:0xe0af68, down:0xf7768e },
-  { name:'Catppuccin',  accent:'#cba6f7', sec:'#89dceb', dot:0x45475a, line:0x313244, bg:0x1e1e2e, up:0xa6e3a1, warn:0xf9e2af, down:0xf38ba8 },
+  { name:'Nord',        accent:'#88c0d0', sec:'#b48ead', dot:0x4c566a, line:0x3b4252, bg:0x242933, up:0xa3be8c, warn:0xebcb8b, down:0xd8848c },
+  { name:'Tokyo Night', accent:'#7aa2f7', sec:'#bb9af7', dot:0x3b4261, line:0x2a2e42, bg:0x1a1b26, up:0x73daca, warn:0xe0af68, down:0xf7768e },
+  { name:'Catppuccin',  accent:'#cba6f7', sec:'#89dceb', dot:0x45475a, line:0x313244, bg:0x1e1e2e, up:0x94e2d5, warn:0xf9e2af, down:0xf38ba8 },
   { name:'Onyx',        accent:'#eef1f5', sec:'#8b95a3', dot:0x2a2e35, line:0x181b20, bg:0x000000, devOff:0x20242b },
-  { name:'Daylight',  accent:'#1f88c4', sec:'#7a5cc8', dot:0x35566b, line:0x53768c, bg:0xe7ecf1, light:true },
+  { name:'Daylight',  accent:'#176c9e', sec:'#6a4cba', dot:0x35566b, line:0x53768c, bg:0xe7ecf1, light:true,
+    up:0x037465, warn:0x964d09, down:0x7f0d2e },   // dark enough to read on the light panels
 ];
 const cyanMats = [heart.material, halo.material, shellA.material,
   ...rings.map(r=>r.material), issMesh.material, issMesh.children[0].material];
@@ -3630,27 +3688,29 @@ function applyTheme(t){
   rs.setProperty('--line-strong', hexA(t.accent, t.light?0.45:0.24));
   if (t.light){
     rs.setProperty('--text', '#1b2531');
-    rs.setProperty('--dim', 'rgba(27,37,49,0.55)');
+    rs.setProperty('--dim', 'rgba(27,37,49,0.66)');   // 4.7:1 on the light ground
     rs.setProperty('--panel', `rgba(255,255,255,${glass.la})`);
     rs.setProperty('--line', 'rgba(20,30,45,0.12)');
+    rs.setProperty('--hover', 'rgba(20,30,45,0.06)');
   } else {
     rs.setProperty('--text', '#e6f1f9');
     rs.setProperty('--dim', 'rgba(230,241,249,0.5)');
     rs.setProperty('--panel', `rgba(10,16,24,${glass.a})`);
     rs.setProperty('--line', 'rgba(255,255,255,0.08)');
+    rs.setProperty('--hover', 'rgba(255,255,255,0.06)');
   }
   document.body.classList.toggle('theme-light', !!t.light);
   C.cyan=parseInt(t.accent.slice(1),16); C.violet=parseInt(t.sec.slice(1),16);
   // status colours: per-theme when a palette defines them, else the universal set
-  C.green = t.up   ?? 0x4ef0a6;
+  C.green = t.up   ?? 0x4ff5c4;
   C.amber = t.warn ?? 0xffc94b;
-  C.red   = t.down ?? 0xff5d6c;
+  C.red   = t.down ?? 0xff7c8a;
   DEV_ON  = t.dev  ?? C.cyan;   // online tailnet devices follow the accent
   DEV_OFF = t.devOff ?? 0x47586a;
   // status colours also drive the CSS (service-list dots, feeds, toasts)
-  rs.setProperty('--green', hexS(C.green));
-  rs.setProperty('--amber', hexS(C.amber));
-  rs.setProperty('--red',   hexS(C.red));
+  rs.setProperty('--ok',   hexS(C.green));
+  rs.setProperty('--warn', hexS(C.amber));
+  rs.setProperty('--bad',  hexS(C.red));
   cyanMats.forEach(m=>m.color.setHex(C.cyan));
   T_ACC.forEach(m=>m.color.setHex(C.cyan));
   T_DOT.forEach(m=>m.color.setHex(t.dot));
@@ -3666,24 +3726,26 @@ function applyTheme(t){
     [n.halo && n.halo.material, gl && gl.material].filter(Boolean)
       .forEach(m=>{ m.blending=blend; m.needsUpdate=true; }); });
   repaintNodes();   // re-tint service/peer/tailnet nodes from the new palette
-  document.querySelectorAll('#pal-list .pal-row').forEach(el=>el.classList.toggle('active', el.dataset.name===t.name));
+  document.querySelectorAll('#pal-list .pal-row').forEach(el=>{ const on=el.dataset.name===t.name;
+    el.classList.toggle('active', on); el.setAttribute('aria-pressed', String(on)); });
   for (const h of THEME_HOOKS){ try { h(t); } catch(e){ console.warn('theme hook', e); } }
   try{ localStorage.setItem('vantage.theme', t.name); }catch(e){}
 }
 { const list=$('pal-list');
-  for (const t of THEMES){ const row=document.createElement('div'); row.className='pal-row'; row.dataset.name=t.name;
-    row.innerHTML=`<span class="pal-sw"><i style="background:${t.accent}"></i><i style="background:${t.sec}"></i></span>${t.name}`;
+  for (const t of THEMES){ const row=document.createElement('button'); row.type='button'; row.className='pal-row'; row.dataset.name=t.name;
+    row.innerHTML=`<span class="pal-sw" aria-hidden="true"><i style="background:${t.accent}"></i><i style="background:${t.sec}"></i></span>${t.name}`;
     row.onclick=()=>applyTheme(t); list.appendChild(row); } }
 function applyGlass(name){
   glass = GLASS.find(g=>g.name===name) || GLASS[1];
   document.documentElement.style.setProperty('--glass-blur', glass.blur + 'px');
   document.body.classList.toggle('glass-clear', glass.name==='Clear');
   if (curTheme) applyTheme(curTheme);       // re-derives --panel at the new opacity
-  document.querySelectorAll('#glass-list .pal-row').forEach(el=>el.classList.toggle('active', el.dataset.name===glass.name));
+  document.querySelectorAll('#glass-list .pal-row').forEach(el=>{ const on=el.dataset.name===glass.name;
+    el.classList.toggle('active', on); el.setAttribute('aria-pressed', String(on)); });
   try{ localStorage.setItem('vantage.glass', glass.name); }catch(e){}
 }
 { const list=$('glass-list');
-  for (const g of GLASS){ const row=document.createElement('div'); row.className='pal-row'; row.dataset.name=g.name;
+  for (const g of GLASS){ const row=document.createElement('button'); row.type='button'; row.className='pal-row'; row.dataset.name=g.name;
     row.textContent=g.name; row.onclick=()=>applyGlass(g.name); list.appendChild(row); } }
 applyGlass((()=>{ try{ return localStorage.getItem('vantage.glass'); }catch(e){ return null; } })());
 const savedTheme=(()=>{ try{ return localStorage.getItem('vantage.theme'); }catch(e){ return null; } })();
@@ -3716,6 +3778,31 @@ addEventListener('keydown', e=>{
     $('palette').classList.add('pal-hidden'); $('layerbox').classList.add('pal-hidden'); }
 });
 
+/* The overlays are dialogs: each is named, focus moves in when one opens and
+   back to where it was when it closes, and the rail, panels and launchers stay
+   inert behind it. Escape and the backdrop close them as before. */
+{
+  const ids = ['expand','nodeinfo','about','news','headlines','tv','search','cities','intel'];
+  const behind = ['rail','stats-drawer','launchers'].map($);
+  let back = null;
+  const sync = () => { const open = ids.some(id => !$(id).classList.contains('ex-hidden'));
+    behind.forEach(el => { el.inert = open; }); return open; };
+  for (const id of ids){
+    const o = $(id), card = o.firstElementChild, ttl = card.querySelector('.ex-title');
+    card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true');
+    if (ttl){ ttl.id = ttl.id || `${id}-ttl`; card.setAttribute('aria-labelledby', ttl.id); }
+    else card.setAttribute('aria-label', 'Search the map');
+    new MutationObserver(() => {
+      if (!o.classList.contains('ex-hidden')){
+        if (card.contains(document.activeElement)) return;
+        back = document.activeElement; sync();
+        setTimeout(() => { if (!card.contains(document.activeElement))
+          card.querySelector('input, button, [href]')?.focus(); }, 60);
+      } else if (!sync() && back && back.isConnected){ back.focus(); back = null; }
+    }).observe(o, { attributes: true, attributeFilter: ['class'] });
+  }
+}
+
 /* render loop
 
    A steady 60 fps. On a faster screen it renders every other refresh (72 at
@@ -3725,6 +3812,10 @@ addEventListener('keydown', e=>{
    (raycast) runs only when the pointer has moved, or about eight times a
    second while the globe turns, not on every frame. */
 const clock=new THREE.Clock();
+// Reduced motion: no auto spin, and the decorative motion (pulsing core, orbits,
+// rings, cable and flight pulses) runs on a clock that stands still.
+const calmMQ = matchMedia('(prefers-reduced-motion: reduce)');
+let mt = 0;
 let lastRender = 0, lastPickT = -1, pointerDirty = true;
 addEventListener('pointermove', ()=>{ pointerDirty = true; }, { passive:true });
 const FRAME_MS = 1000/60;
@@ -3767,7 +3858,9 @@ function frame(now){
     tickFps(now);
   }
   const dt=Math.min(clock.getDelta(),0.05), t=clock.getElapsedTime();
-  if (autoSpin) tRotY+=0.04*dt;
+  const calm=calmMQ.matches, mdt=calm?0:dt;
+  mt+=mdt;
+  if (autoSpin && !calm) tRotY+=0.04*dt;
   const k=1-Math.exp(-6*dt);
   rotY+=(tRotY-rotY)*k; rotX+=(tRotX-rotX)*k; dist+=(tDist-dist)*(1-Math.exp(-5*dt));
   // With the constellation showing, the frame has to hold both it and the
@@ -3838,18 +3931,18 @@ function frame(now){
     loadRadarHi();
   }
 
-  heart.scale.setScalar(1+Math.sin(t*1.8)*0.045);
-  halo.scale.setScalar(1+Math.sin(t*1.8+0.6)*0.09); halo.material.opacity=0.11+Math.sin(t*1.8)*0.05;
-  shellA.rotation.set(t*0.04,t*0.09,0);
-  rings.forEach((r,i)=>r.rotation.z=t*(0.03+i*0.014));
+  heart.scale.setScalar(1+Math.sin(mt*1.8)*0.045);
+  halo.scale.setScalar(1+Math.sin(mt*1.8+0.6)*0.09); halo.material.opacity=0.11+Math.sin(mt*1.8)*0.05;
+  shellA.rotation.set(mt*0.04,mt*0.09,0);
+  rings.forEach((r,i)=>r.rotation.z=mt*(0.03+i*0.014));
 
   const all=[...nodes, ...tailnetNodes]; if (lapNode) all.push(lapNode);
   const sk=1-Math.exp(-16*dt);   // smoothing factor for hover scale
-  for (const n of all){ n.angle+=n.speed*dt*2;   // slow, deliberate orbits
+  for (const n of all){ n.angle+=n.speed*mdt*2;   // slow, deliberate orbits
     const x=CENTER.x+Math.cos(n.angle)*n.radius, z=CENTER.z+Math.sin(n.angle)*n.radius,
       y=CENTER.y+Math.sin(n.angle)*Math.sin(n.tilt)*n.radius*0.32;
     n.mesh.position.set(x,y,z); n.halo.position.set(x,y,z);
-    n.halo.material.opacity=0.18+Math.sin(t*2.2+n.angle)*0.09;
+    n.halo.material.opacity=0.18+Math.sin(mt*2.2+n.angle)*0.09;
     const ts=(n===hovered)?n.hoverScale:n.baseScale, cs=n.mesh.scale.x+(ts-n.mesh.scale.x)*sk;
     n.mesh.scale.setScalar(cs); n.halo.scale.setScalar(cs);
     // in place: setFromPoints would allocate a new buffer per spoke per frame
@@ -3861,16 +3954,16 @@ function frame(now){
 
   for (const p of pulses.concat(quakeRings, layerPulses)){
     if (!p.mesh || !p.mesh.material) continue;
-    const ph=((t+p.t0)%p.loop)/p.loop;
+    const ph=((mt+p.t0)%p.loop)/p.loop;
     p.mesh.scale.setScalar(0.05+ph*p.maxR); p.mesh.material.opacity=0.7*(1-ph); }
 
-  for (const p of planes){ p.t=(p.t+p.speed*dt)%1; p.craft.position.copy(p.curve.getPoint(p.t)); }
-  for (const c of cables){ c.t=(c.t+c.speed*dt)%1; c.pulse.position.copy(c.curve.getPoint(c.t)); }
+  for (const p of planes){ p.t=(p.t+p.speed*mdt)%1; p.craft.position.copy(p.curve.getPoint(p.t)); }
+  for (const c of cables){ c.t=(c.t+c.speed*mdt)%1; c.pulse.position.copy(c.curve.getPoint(c.t)); }
 
   if (issTarget){ const live=Date.now()-issLastSeen<60000;   // hide a stale/dead ISS instead of freezing it
     issMesh.visible=live;
     if (live){ issMesh.position.lerp(issTarget, 1-Math.exp(-2*dt));
-      issMesh.children[0].scale.setScalar(1+Math.sin(t*3)*0.2); } }
+      issMesh.children[0].scale.setScalar(1+Math.sin(mt*3)*0.2); } }
 
   const pickDue = pointerDirty || drag || t - lastPickT > 0.12;
   if (pickDue){

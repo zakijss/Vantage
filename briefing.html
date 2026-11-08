@@ -19,9 +19,12 @@
     --cm: 1.15;                                  /* contrast-multiplier */
     --tsm: 0.9;                                  /* text-saturation-multiplier */
     --primary: hsl(360, 100%, 60%);              /* selection, focus and graph lines */
-    --ok: hsl(135, 65%, 52%);                    /* positive-color */
-    --bad: hsl(209, 88%, 54%);                   /* negative-color */
-    --warn: hsl(40, 85%, 62%);
+    /* status, after the theme's positive and negative hues, at lightnesses that
+       read at 4.5:1 on a tile and stay apart under red-green and blue-yellow
+       colour blindness. Each state has a shape as well (.dot, .items li). */
+    --ok: hsl(135, 65%, 78%);
+    --warn: hsl(30, 85%, 50%);
+    --bad: hsl(209, 88%, 60%);
 
     --bg: hsl(var(--bgh), var(--bgs), var(--bgl));
     --card: hsla(var(--bgh), var(--bgs), calc(var(--bgl) + 3%), 0.72);
@@ -74,10 +77,11 @@
   /* small text buttons: one bordered pill, 36 px drawn, 44 px to hit */
   .pill, .act { position: relative; display: inline-grid; place-items: center; flex: none; min-height: 36px; padding: 0 16px;
     border: 1px solid var(--glass-border); border-radius: 999px; background: none; color: var(--text);
-    font-size: 13px; text-decoration: none; cursor: pointer; transition: background-color .15s, color .15s, transform .12s; }
+    font-size: 13px; text-decoration: none; cursor: pointer; transition: background-color .15s, color .15s, scale .15s ease-out;
+    -webkit-tap-highlight-color: transparent; }
   .pill::after, .act::after { content: ""; position: absolute; inset: -4px; }
-  .pill:hover:not(:disabled), .act:hover { background: var(--hover); color: var(--text-hi); }
-  .pill:active:not(:disabled), .act:active { background: var(--press); transform: scale(.97); }
+  @media (hover: hover) { .pill:hover:not(:disabled), .act:hover { background: var(--hover); color: var(--text-hi); } }
+  .pill:active:not(:disabled), .act:active { background: var(--press); scale: .96; }
   .pill:disabled { opacity: .5; cursor: default; }
   #scans { display: flex; flex-wrap: wrap; gap: 8px; }
   #scans[hidden] { display: none; }
@@ -90,7 +94,7 @@
   .widget { min-width: 0; }
   /* titles sit above their card, as on the start page */
   .wh { display: flex; align-items: center; gap: 10px; min-height: 36px; margin: 0 0 7px; padding: 0 17px;
-    font-size: 14px; font-weight: 400; text-transform: uppercase; color: var(--text); }
+    font-size: 14px; font-weight: 400; text-transform: uppercase; letter-spacing: .05em; color: var(--text); }
   .wh .act { margin-left: auto; text-transform: none; }
   .card { padding: var(--pad); border: 1px solid var(--border); border-radius: var(--radius);
     background: var(--card); box-shadow: 0 10px 24px rgba(0, 0, 0, .3); }
@@ -102,20 +106,28 @@
   .filters button { position: relative; height: 32px; padding: 0 12px; border: 0; border-radius: 999px; background: none;
     color: var(--text); cursor: pointer; transition: background-color .15s, color .15s; }
   .filters button::after { content: ""; position: absolute; inset: -6px 0; }
-  .filters button:hover { background: var(--hover); color: var(--text-hi); }
+  @media (hover: hover) { .filters button:hover { background: var(--hover); color: var(--text-hi); } }
   .filters button[aria-pressed="true"] { background: var(--selected); color: var(--text-hi); font-weight: 600; }
   #list { overflow-y: auto; margin-top: 8px; overscroll-behavior: contain; }
   #list button { display: block; width: 100%; margin: 0 0 2px; padding: 9px 12px; border: 0; border-radius: var(--radius);
     background: none; color: inherit; text-align: left; cursor: pointer; transition: background-color .15s; }
-  #list button:hover { background: var(--hover); }
+  @media (hover: hover) { #list button:hover { background: var(--hover); } }
   #list button[aria-current="true"] { background: var(--selected); box-shadow: inset 3px 0 var(--primary); }
   #list button[aria-current="true"] .d { color: var(--text-hi); }
   nav .d { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text-para); }
-  nav .k { margin-left: auto; font-weight: 400; font-size: 11px; text-transform: uppercase; color: var(--subdue); }
+  nav .k { margin-left: auto; font-weight: 400; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--subdue); }
   nav .h { display: block; margin-top: 1px; font-size: 12px; color: var(--subdue); }
   #list .note { padding: 9px 12px; }
-  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--ok); flex: none; }
-  .dot.attention, .dot.warn { background: var(--warn); }
+  /* a shape per state, as on the main page: ok a filled circle, warn a
+     diamond, bad a ring */
+  .dot, .items li::before, .tile.warn .l::before, .tile.bad .l::before {
+    width: 9px; height: 9px; flex: none; border-radius: 50%; background: var(--ok); }
+  .dot.attention, .dot.warn, .items li.warn::before, .tile.warn .l::before {
+    background: var(--warn); border-radius: 1px; transform: rotate(45deg) scale(.85); }
+  .items li.bad::before, .tile.bad .l::before { background: none; border: 2px solid var(--bad); }
+  .tile.warn .l::before, .tile.bad .l::before { content: ""; display: inline-block; width: 8px; height: 8px;
+    margin: 0 7px 1px 1px; vertical-align: baseline; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
   /* ---- the view: cards in a grid that fills the width */
   #view { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 560px), 1fr)); gap: var(--gap); align-items: start; }
@@ -130,7 +142,7 @@
     background: var(--fill); color: var(--primary); }
   .tile.warn { color: var(--warn); border-color: color-mix(in srgb, var(--warn) 55%, transparent); }
   .tile.bad { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 60%, transparent); }
-  .tile .l { font-size: 11px; text-transform: uppercase; color: var(--subdue); }
+  .tile .l { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--subdue); }
   .tile .v { font-size: 22px; font-weight: 600; line-height: 1.3; color: var(--text-hi); font-variant-numeric: tabular-nums; }
   .tile.warn .v { color: var(--warn); } .tile.bad .v { color: var(--bad); }
   .tile .u { font-size: 12px; color: var(--subdue); }
@@ -144,11 +156,10 @@
   .items li { display: flex; align-items: center; gap: 10px; padding: 6px 6px 6px 12px; border-radius: var(--radius);
     background: var(--fill); color: var(--text-para); }
   .items li .t { flex: 1; min-width: 0; }
-  .items li::before { content: ""; width: 8px; height: 8px; flex: none; border-radius: 50%; background: var(--ok); }
-  .items li.warn::before { background: var(--warn); } .items li.bad::before { background: var(--bad); }
+  .items li::before { content: ""; }
   .items li.done { color: var(--subdue); }
   .items li.done .t { text-decoration: line-through; text-decoration-color: var(--subdue); }
-  .items li.done::before { background: var(--subdue); }
+  .items li.done::before { background: var(--subdue); border: 0; border-radius: 50%; transform: none; }
   .act { min-height: 32px; padding: 0 14px; }
   .act::after { inset: -6px; }
 
@@ -161,7 +172,7 @@
   .sec li.warning .t, .sec .alert.high .t { color: var(--warn); }
   .sec li .id { flex: none; font-weight: 600; color: var(--text-hi); text-decoration: underline;
     text-decoration-color: var(--subdue); text-underline-offset: 3px; }
-  .sec li .id:hover { text-decoration-color: var(--text-hi); }
+  @media (hover: hover) { .sec li .id:hover { text-decoration-color: var(--text-hi); } }
   .sec li .more { margin: 2px 0 0; font-size: 12px; color: var(--subdue); overflow-wrap: anywhere; }
   .tag { flex: none; padding: 0 8px; border: 1px solid var(--primary); border-radius: 999px; color: var(--text-hi); font-size: 11px; }
   h3 { margin: 18px 0 8px; font-size: 13px; font-weight: 600; color: var(--text-hi); }
@@ -169,7 +180,7 @@
   .alert time { margin-right: 4px; color: var(--subdue); white-space: nowrap; font-variant-numeric: tabular-nums; }
   .alert .host { font-weight: 600; color: var(--text-hi); }
   .chart { margin-top: 16px; }
-  .chart .l { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; color: var(--subdue); }
+  .chart .l { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--subdue); }
   .chart svg { display: block; width: 100%; height: auto; overflow: visible; }
   .chart .axis { fill: var(--subdue); font: 11px var(--mono); }
   .note { color: var(--subdue); }
@@ -182,7 +193,7 @@
     nav .card { max-height: 42vh; }
     header { top: 6px; }
   }
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } .pill:active, .act:active { scale: none; } }
 </style>
 </head>
 <body>
@@ -260,6 +271,8 @@
     view.append(w);
     return c;
   }
+  // what each level is called, for screen readers (the dots are shapes and colours)
+  const said = { ok: 'Fine', warn: 'Needs a look', attention: 'Needs a look', bad: 'Problem' };
   function top(dotCls, headline, when) {
     const t = el('div', 'top');
     t.append(el('span', `dot ${dotCls}`), el('p', 'head', headline), el('p', 'when', when));
@@ -287,6 +300,7 @@
       const b = e.btn = el('button'), d = el('span', 'd');
       b.dataset.id = e.id;
       d.append(el('span', `dot${e.look ? ' warn' : ''}`), e.name, el('span', 'k', e.kind));
+      if (e.look) d.append(el('span', 'sr', `, ${said.warn.toLowerCase()}`));
       b.append(d, el('span', 'h', e.note));
       b.onclick = () => { select(b); e.show(); };
       if (e.id === sel) b.setAttribute('aria-current', 'true');
@@ -314,7 +328,7 @@
     if (t.kind === 'bars' || t.kind === 'strip') {
       const max = Math.max(1, ...vals.map((p) => p[1]));
       for (const [i, v] of vals) {
-        const h = t.kind === 'strip' ? H - 8 : v ? Math.max(3, v / max * (H - 2)) : 0;
+        const h = t.kind === 'strip' ? (v ? H - 12 : H) : v ? Math.max(3, v / max * (H - 2)) : 0;
         if (h) add('rect', { x: i * step + .4, y: H - h, width: Math.max(.8, step - .8), height: h,
           fill: t.kind === 'strip' ? (v ? 'var(--ok)' : 'var(--bad)') : 'currentColor', opacity: t.kind === 'strip' && v ? .75 : .85 });
       }
@@ -340,9 +354,10 @@
       { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })}`));
     const tiles = el('div', 'tiles');
     for (const t of r.tiles || []) {
-      const d = el('div', `tile ${t.level || 'ok'}`), v = el('div');
+      const d = el('div', `tile ${t.level || 'ok'}`), v = el('div'), l = el('div', 'l', t.label);
+      if (t.level === 'warn' || t.level === 'bad') l.append(el('span', 'sr', `, ${said[t.level].toLowerCase()}`));
       v.append(el('span', 'v', t.value ?? '--'), el('span', 'u', t.unit ? ` ${t.unit}` : ''));
-      d.append(el('div', 'l', t.label), v, graph(t), el('div', 'n', t.note || ''));
+      d.append(l, v, graph(t), el('div', 'n', t.note || ''));
       tiles.append(d);
     }
     c.append(tiles);
@@ -362,7 +377,10 @@
       const b = el('button', 'act', it.done ? 'Undo' : 'Clear');
       b.setAttribute('aria-label', `${it.done ? 'Undo' : 'Clear'}: ${it.text}`);
       b.onclick = () => api(`/api/briefing/${it.done ? 'undo' : 'done'}`, { method: 'POST', body: JSON.stringify({ keys: [it.key] }) }).then(() => showDay(date));
-      li.append(el('span', 't', it.text), b);
+      const tx = el('span', 't');
+      if (said[it.level]) tx.append(el('span', 'sr', `${said[it.level]}: `));
+      tx.append(it.text);
+      li.append(tx, b);
       ul.append(li);
     }
     ic.append(ul);
@@ -478,8 +496,9 @@
     c.append(top(h.warnings.length ? 'warn' : '', h.host, when));
     const tiles = el('div', 'tiles');
     const tile = (label, value, note, warn) => {
-      const d = el('div', `tile${warn ? ' warn' : ''}`);
-      d.append(el('div', 'l', label), el('div', 'v', value), el('div', 'n', note));
+      const d = el('div', `tile${warn ? ' warn' : ''}`), l = el('div', 'l', label);
+      if (warn) l.append(el('span', 'sr', `, ${said.warn.toLowerCase()}`));
+      d.append(l, el('div', 'v', value), el('div', 'n', note));
       tiles.append(d);
     };
     const hist = h.history.filter((p) => typeof p.index === 'number'), before = hist.at(-2);
@@ -539,7 +558,9 @@
       const t = new Date(a.time * 1000), tm = el('time', '', t.toLocaleString(undefined,
         { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }));
       tm.dateTime = t.toISOString();
-      row.append(tm, el('span', 'host', a.host || ''), el('span', 't', a.text || ''));
+      row.append(tm, el('span', 'host', a.host || ''));
+      if (a.priority >= 4) row.append(el('span', 'tag', 'high'));
+      row.append(el('span', 't', a.text || ''));
       li.append(row);
       ul.append(li);
     }
