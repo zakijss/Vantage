@@ -14,7 +14,10 @@ disks and temperature beside a WebGL globe, and layers public data feeds
 alerts and tells you. It never starts, stops or changes anything on the
 machines it watches.
 
-![Vantage with a demo config: server and laptop stats on the left, the globe with earthquakes and other layers in the middle, and service checks and public feeds on the right](docs/screenshot-globe.png)
+![A 3D render of a desk monitor showing Vantage with a made-up home server: host and laptop stats on the left, the globe with earthquakes and the services and the laptop orbiting above it in the middle, service checks and public feeds on the right](docs/render-hero.webp)
+
+<sub>The picture above is a 3D render with a real screenshot of Vantage on the
+monitor. The plain screenshots are under [Features](#features).</sub>
 
 The backend is one Python process using only the standard library. The page
 loads Three.js and a few small helpers from public CDNs (unpkg, jsDelivr). There
@@ -58,6 +61,13 @@ is nothing to build.
   [Lynis](https://cisofy.com/lynis/) audit with the last week's security
   alerts.
 
+In the Cyan and Daylight colour schemes, with a made-up host and services:
+
+<p align="center">
+  <img src="docs/screenshot-dark.webp" alt="Vantage in the Cyan scheme: HOMESERVER at 21% CPU with its memory, disks, load and temperature, a laptop at 23%, earthquakes in the event log, the globe turned to the Americas with the services and the laptop orbiting above it, two of four services up with one asleep, and the feeds panel" width="49%">
+  <img src="docs/screenshot-light.webp" alt="The same console in the Daylight scheme, with a pale globe and darker status colours" width="49%">
+</p>
+
 ## How it works
 
 ![Diagram: host stats, service checks, Tailscale and Beszel, public feeds and host scripts feed server.py, which serves the globe page, the briefing and security pages, and alerts](docs/how-it-works.svg)
@@ -94,6 +104,8 @@ Open <http://127.0.0.1:8106/> and log in with the token. Docker takes the same
 This runs on the default settings, with no host stats and no services of your
 own. To watch your own server, pick a route under
 [Installation](#installation).
+
+![A closer 3D render of the monitor from the left, focused on the globe and the services orbiting above it](docs/render-close.webp)
 
 ## Installation
 
@@ -321,7 +333,7 @@ item stores that key, so the item stays gone while it reads the same and comes
 back when it changes. The day pages keep cleared items, marked done, with
 Undo.
 
-![The briefing page with six tiles (data drive, last backup, CPU, services, failed logins, memory) and three items that need a look](docs/screenshot-briefing.png)
+![The briefing page with six tiles (data drive, last backup at 29 hours, CPU, services at 4 of 5, failed logins, memory), three items that need a look, and a week of briefings in the history column](docs/screenshot-briefing.png)
 
 | Request | What it does |
 |---|---|
@@ -343,7 +355,7 @@ Each links to its control page on cisofy.com and is marked new when the run
 before didn't have it. The page also lists what that run had and this one
 doesn't. Alerts, the last entry, lists the last 7 days of security alerts.
 
-![The security page for one host: hardening index 75, one warning, four suggestions grouped by category, and a chart of five runs](docs/screenshot-security.png)
+![The security page for one host: hardening index 75, up from 72, one new warning, four suggestions grouped by category, and a chart of five weekly runs](docs/screenshot-security.png)
 
 Lynis runs as root and its reports are root-only, so Vantage never reads them.
 A script on each host writes a summary after each run, and something on the
@@ -486,5 +498,6 @@ covers pull requests and the changelog.
 
 MIT; see [LICENSE](LICENSE). The icons, the font and the data files in
 `static/` keep their own terms, and the submarine cable layer's data is
-CC BY-NC-SA 3.0, fetched at run time and not for commercial use.
+CC BY-NC-SA 3.0, fetched at run time and not for commercial use. The renders
+in `docs/` use Poly Haven's CC0 models and textures.
 [THIRD-PARTY.md](THIRD-PARTY.md) lists each with its licence.

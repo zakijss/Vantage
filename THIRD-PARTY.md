@@ -10,6 +10,7 @@ Vantage's own code is under the MIT licence in `LICENSE`. This file lists everyt
 | JetBrains Mono, Regular | | `static/JetBrainsMono-Regular.woff2` | https://github.com/JetBrains/JetBrainsMono | Copyright 2020 The JetBrains Mono Project Authors | SIL Open Font License 1.1, text below |
 | Country centres and names | | `static/countries.json`, converted from `countries.csv` | Google's DSPL canonical datasets, https://github.com/google/dspl/blob/master/samples/google/canonical/countries.csv | Copyright 2018, Google Inc. | BSD-3-Clause, text below |
 | Nuclear power plants | v1.3 (2021) | `static/nuclear.json`: an extract, 195 nuclear plants with longitude, latitude, name, country and capacity in MW, coordinates rounded to three decimals | World Resources Institute, Global Power Plant Database, https://datasets.wri.org/dataset/globalpowerplantdatabase | World Resources Institute | CC BY 4.0, https://creativecommons.org/licenses/by/4.0/ |
+| Poly Haven assets: Potted Plant 04, Walnut Veneer and Painted Plaster Wall, and the Kiara Interior HDRI | | rendered into `docs/render-hero.webp` and `docs/render-close.webp` | https://polyhaven.com | James Ray Cock, Jenelle van Heerden, Amal Kumar, Greg Zaal | CC0 1.0 (public domain dedication) |
 
 ## Loaded by the page from public CDNs
 
