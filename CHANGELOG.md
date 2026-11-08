@@ -23,6 +23,12 @@ All notable changes are listed here. The format follows
 - Daylight's accent, muted text and INTEL tabs are dark enough to read; panels
   and popovers share one corner radius.
 
+### Fixed
+
+- On a high-density screen wider than 1000 pixels, the globe's canvas drew at
+  twice the window's size, so the globe sat off-centre towards the bottom
+  right. It now fills the window.
+
 ## [1.1.0] - 2026-11-01
 
 The first public release.
