@@ -37,7 +37,7 @@ PATH = os.environ.get("VANTAGE_CONFIG") or os.path.join(
 NUM, TEXT, LIST, OBJ, BOOL = (int, float), str, list, dict, bool
 KEYS = {
     "host": OBJ, "peer": OBJ, "services": LIST, "service_host": TEXT, "gateway_probe_port": int,
-    "origin": TEXT, "owners": LIST, "dashboard": OBJ, "history_link": OBJ, "home": OBJ,
+    "origin": TEXT, "owners": LIST, "owner_cap": TEXT, "dashboard": OBJ, "history_link": OBJ, "home": OBJ,
     "cities": LIST, "disks": LIST, "backup_path": TEXT, "cert": OBJ, "notify_url": TEXT,
     "alert_cert_days": NUM, "alert_backup_hours": NUM, "alert_disk_pct": NUM, "alert_grace_min": NUM,
     "acks_file": TEXT, "retain_days": NUM, "tailnet_domain": TEXT, "exposure_file": TEXT,
