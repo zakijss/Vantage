@@ -212,6 +212,7 @@ comma-separated.
 | `gateway_probe_port` | | none | A port to try first when finding which gateway address reaches the host; every service's port is tried after it |
 | `origin` | `DASH_ORIGIN` | none | Vantage's own public origin, such as `https://server.example.ts.net:8443`. Requests from it count as Vantage's own pages |
 | `owners` | `DASH_TS_USERS` | `[]` | Tailnet logins that need no token, through the Serve socket only |
+| `owner_cap` | `DASH_OWNER_CAP` | none | A tailnet app capability that needs no token either, for tagged devices (see Security) |
 | `dashboard` | | none | A start page that links here and shows the briefing: `label`, `url`, `title`. Its origin may read and clear the briefing (CORS) |
 | `history_link` | | none | A link under the host's charts, such as Beszel: `label`, `url` |
 | `home` | | none | `{"name", "code", "lat", "lon", "tz"}`: weather, air quality, the home marker, flights overhead and the first clock. `lat` and `lon` are required |
@@ -451,6 +452,23 @@ configured `dashboard` for the briefing widget. That stops another site from
 using your logged-in browser against Vantage. The socket is created with mode
 600, and any container that mounts the state folder could use it, so keep that
 folder to Vantage alone.
+
+Tagged devices get no `Tailscale-User-Login`, so `owners` can't name them and
+the page asks them for the token. Grant them an app capability in the tailnet
+policy instead, have Serve forward it, and set `owner_cap` to its name:
+
+```jsonc
+"grants": [{"src": ["tag:admin"], "dst": ["tag:server"], "app": {"example.com/cap/vantage": [{}]}}]
+```
+
+```sh
+tailscale serve --bg --https=8443 --accept-app-caps=example.com/cap/vantage unix:/path/to/serve.sock
+```
+
+Serve (Tailscale 1.92 or later) sends the grant in a
+`Tailscale-App-Capabilities` header and strips any copy a client sends. Vantage
+treats it like an owner's login: on the socket only, and with the same origin
+checks.
 
 For plain tailnet access without the identity feature,
 `tailscale serve --bg --https=8443 http://127.0.0.1:8106` is enough, and

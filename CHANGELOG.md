@@ -4,6 +4,14 @@ All notable changes are listed here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `owner_cap` (`DASH_OWNER_CAP`): a tailnet app capability, forwarded by
+  Tailscale Serve, that counts as the owner. Tagged devices carry no tailnet
+  login, so until now they had to type the token.
+
 ## [1.2.0] - 2026-11-08
 
 ### Changed

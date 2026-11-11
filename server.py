@@ -76,7 +76,22 @@ HOME = config.get("home")
 # (SERVE_SOCK): the TCP port is also reachable from containers with host-loopback
 # access, and a request there could carry the header itself. See _owner().
 TS_USERS = {u.strip().lower() for u in config.get("owners", [], env="DASH_TS_USERS") if u.strip()}
+# Tagged devices get no Tailscale-User-Login, so a tailnet grant can name them
+# instead: Serve started with --accept-app-caps=<this> forwards the grant in
+# Tailscale-App-Capabilities (JSON, stripped from clients too). Same socket rule.
+OWNER_CAP = (config.get("owner_cap", "", env="DASH_OWNER_CAP") or "").strip()
 SERVE_SOCK = os.environ.get("DASH_SERVE_SOCK", "")
+
+
+def _has_cap(header):
+    """True if Serve's Tailscale-App-Capabilities header grants OWNER_CAP."""
+    if not OWNER_CAP or not header:
+        return False
+    try:
+        caps = json.loads(header)
+    except ValueError:
+        return False   # shortcut: RFC 2047-encoded (non-ASCII) values are refused; grant {} to stay ASCII
+    return isinstance(caps, dict) and OWNER_CAP in caps
 
 
 def _origin(url):
@@ -1601,7 +1616,8 @@ class Handler(BaseHTTPRequestHandler):
         cannot forge them."""
         if not self.via_serve:
             return False
-        if not TS_USERS or self.headers.get("Tailscale-User-Login", "").strip().lower() not in TS_USERS:
+        login = self.headers.get("Tailscale-User-Login", "").strip().lower()
+        if not (login and login in TS_USERS) and not _has_cap(self.headers.get("Tailscale-App-Capabilities")):
             return False
         site, origin = self.headers.get("Sec-Fetch-Site"), self.headers.get("Origin")
         ok_origins = {None, VANTAGE_ORIGIN} | ({DASHBOARD_ORIGIN} if dashboard else set())
